@@ -1,0 +1,10 @@
+{
+    "name": "microbit-tutorial-piloto",
+    "description": "",
+    "dependencies": {
+        "core": "*"
+    },
+    "files": [
+        "piloto.md"
+    ]
+}
