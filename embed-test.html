@@ -31,6 +31,8 @@
   iframe.allow = 'usb; autoplay; camera; microphone;';
   document.getElementById('app').appendChild(iframe);
 
+  let tutorialStarted = false;
+
   iframe.src = createMakeCodeURL(
     'https://makecode.microbit.org',
     undefined,
@@ -46,6 +48,11 @@
       controllerId: 'teste-missao-coracao',
       initialProjects: async () => [emptyMakeCodeProject],
       onEditorContentLoaded: () => {
+        if (tutorialStarted) {
+          log('editorcontentloaded (ignorado, ja iniciado)');
+          return;
+        }
+        tutorialStarted = true;
         log('editorcontentloaded - iniciando atividade...');
         driver.startActivity({
           activityType: 'tutorial',
