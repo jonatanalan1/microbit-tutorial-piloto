@@ -46,10 +46,12 @@
       controllerId: 'teste-missao-coracao',
       initialProjects: async () => [emptyMakeCodeProject],
       onEditorContentLoaded: () => {
-        log('editorcontentloaded - importando tutorial...');
-        driver.importTutorial({
-          tutorial: 'github:jonatanalan1/microbit-tutorial-piloto/piloto',
-        }).then(() => log('importTutorial OK')).catch((e) => log('importTutorial ERRO: ' + e));
+        log('editorcontentloaded - iniciando atividade...');
+        driver.startActivity({
+          activityType: 'tutorial',
+          path: 'github:jonatanalan1/microbit-tutorial-piloto/piloto',
+          title: 'Botao e Icone',
+        }).then(() => log('startActivity OK')).catch((e) => log('startActivity ERRO: ' + e));
       },
       onWorkspaceLoaded: () => log('workspaceloaded'),
       onTutorialEvent: (e) => log('tutorialevent: ' + JSON.stringify(e).slice(0, 200)),
@@ -62,5 +64,4 @@
   window.__driver = driver;
 </script>
 </body>
-</html>
 </html>
