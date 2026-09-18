@@ -290,31 +290,6 @@
   </div>
 </div>
 
-<script>
-  (function(){
-    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
-    var dots = Array.prototype.slice.call(document.querySelectorAll('.dot'));
-    var current = 0;
-
-    function go(i){
-      current = Math.max(0, Math.min(slides.length - 1, i));
-      slides.forEach(function(s, idx){ s.hidden = idx !== current; });
-      dots.forEach(function(d, idx){ d.classList.toggle('active', idx === current); });
-    }
-
-    document.getElementById('btn-next-0').addEventListener('click', function(){ go(1); });
-    document.getElementById('btn-next-1').addEventListener('click', function(){ go(2); });
-    document.getElementById('btn-back-1').addEventListener('click', function(){ go(0); });
-    document.getElementById('btn-restart').addEventListener('click', function(){ go(0); });
-
-    dots.forEach(function(d){
-      d.addEventListener('click', function(){ go(parseInt(d.dataset.i, 10)); });
-    });
-
-    go(0);
-  })();
-</script>
-
 <script type="module">
   import {
     MakeCodeFrameDriver,
@@ -322,45 +297,73 @@
     emptyMakeCodeProject,
   } from "https://cdn.jsdelivr.net/npm/@microbit/makecode-embed@0.7.4/dist/esm/vanilla/index.js";
 
-  var statusEl = document.getElementById('editor-status');
-  function setStatus(msg){ if (statusEl) statusEl.textContent = msg; }
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var dots = Array.prototype.slice.call(document.querySelectorAll('.dot'));
+  var current = 0;
 
-  var frame = document.getElementById('editor-frame');
-  var iframe = document.createElement('iframe');
-  iframe.allow = 'usb; autoplay; camera; microphone;';
-  iframe.title = 'Editor MakeCode - Botão e Ícone';
-  frame.appendChild(iframe);
+  function go(i){
+    current = Math.max(0, Math.min(slides.length - 1, i));
+    slides.forEach(function(s, idx){ s.hidden = idx !== current; });
+    dots.forEach(function(d, idx){ d.classList.toggle('active', idx === current); });
+    if (current === 1) { initEditor(); }
+  }
 
-  iframe.src = createMakeCodeURL('https://makecode.microbit.org', undefined, undefined, 1, undefined);
+  document.getElementById('btn-next-0').addEventListener('click', function(){ go(1); });
+  document.getElementById('btn-next-1').addEventListener('click', function(){ go(2); });
+  document.getElementById('btn-back-1').addEventListener('click', function(){ go(0); });
+  document.getElementById('btn-restart').addEventListener('click', function(){ go(0); });
 
-  var tutorialStarted = false;
+  dots.forEach(function(d){
+    d.addEventListener('click', function(){ go(parseInt(d.dataset.i, 10)); });
+  });
 
-  var driver = new MakeCodeFrameDriver(
-    {
-      controllerId: 'missao-coracao',
-      initialProjects: async function(){ return [emptyMakeCodeProject]; },
-      onWorkspaceLoaded: function(){
-        if (tutorialStarted) return;
-        tutorialStarted = true;
-        setStatus('Carregando a missão...');
-        driver.startActivity({
-          activityType: 'tutorial',
-          path: 'github:jonatanalan1/microbit-tutorial-piloto/piloto',
-          title: 'Botao e Icone',
-        }).then(function(){
-          if (statusEl) { statusEl.remove(); statusEl = null; }
-          iframe.classList.add('ready');
-        }).catch(function(e){
-          setStatus('Não deu pra carregar o editor aqui dentro. Use o link abaixo pra abrir numa aba nova.');
-          console.error('startActivity ERRO', e);
-        });
+  go(0);
+
+  var editorStarted = false;
+  function initEditor(){
+    if (editorStarted) return;
+    editorStarted = true;
+
+    var statusEl = document.getElementById('editor-status');
+    function setStatus(msg){ if (statusEl) statusEl.textContent = msg; }
+
+    var frame = document.getElementById('editor-frame');
+    var iframe = document.createElement('iframe');
+    iframe.allow = 'usb; autoplay; camera; microphone;';
+    iframe.title = 'Editor MakeCode - Botão e Ícone';
+    frame.appendChild(iframe);
+
+    iframe.src = createMakeCodeURL('https://makecode.microbit.org', undefined, undefined, 1, undefined);
+
+    var tutorialStarted = false;
+
+    var driver = new MakeCodeFrameDriver(
+      {
+        controllerId: 'missao-coracao',
+        initialProjects: async function(){ return [emptyMakeCodeProject]; },
+        onWorkspaceLoaded: function(){
+          if (tutorialStarted) return;
+          tutorialStarted = true;
+          setStatus('Carregando a missão...');
+          driver.startActivity({
+            activityType: 'tutorial',
+            path: 'github:jonatanalan1/microbit-tutorial-piloto/piloto',
+            title: 'Botao e Icone',
+          }).then(function(){
+            if (statusEl) { statusEl.remove(); statusEl = null; }
+            iframe.classList.add('ready');
+          }).catch(function(e){
+            setStatus('Não deu pra carregar o editor aqui dentro. Use o link abaixo pra abrir numa aba nova.');
+            console.error('startActivity ERRO', e);
+          });
+        },
+        onWorkspaceSave: function(){},
       },
-      onWorkspaceSave: function(){},
-    },
-    function(){ return iframe; }
-  );
+      function(){ return iframe; }
+    );
 
-  driver.initialize();
+    driver.initialize();
+  }
 </script>
 
 </body>
