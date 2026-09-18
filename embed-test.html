@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Teste embed controller</title>
+<style>
+  html, body { height:100%; margin:0; }
+  #app { width:100%; height:100vh; }
+  iframe { width:100%; height:100%; border:none; }
+  #status { position:fixed; top:0; left:0; background:#fff; font:14px monospace; padding:4px 8px; z-index:10; }
+</style>
+</head>
+<body>
+<div id="status">carregando...</div>
+<div id="app"></div>
+
+<script type="module">
+  import {
+    MakeCodeFrameDriver,
+    createMakeCodeURL,
+    emptyMakeCodeProject,
+  } from "https://cdn.jsdelivr.net/npm/@microbit/makecode-embed@0.7.4/dist/esm/vanilla/index.js";
+
+  const statusEl = document.getElementById('status');
+  function log(msg) {
+    console.log('[TESTE]', msg);
+    statusEl.textContent = msg;
+  }
+
+  const iframe = document.createElement('iframe');
+  iframe.allow = 'usb; autoplay; camera; microphone;';
+  document.getElementById('app').appendChild(iframe);
+
+  iframe.src = createMakeCodeURL(
+    'https://makecode.microbit.org',
+    undefined,
+    undefined,
+    1,
+    undefined
+  );
+
+  log('iframe src: ' + iframe.src);
+
+  const driver = new MakeCodeFrameDriver(
+    {
+      controllerId: 'teste-missao-coracao',
+      initialProjects: async () => [emptyMakeCodeProject],
+      onEditorContentLoaded: () => {
+        log('editorcontentloaded - importando tutorial...');
+        driver.importTutorial({
+          tutorial: 'github:jonatanalan1/microbit-tutorial-piloto/piloto',
+        }).then(() => log('importTutorial OK')).catch((e) => log('importTutorial ERRO: ' + e));
+      },
+      onWorkspaceLoaded: () => log('workspaceloaded'),
+      onTutorialEvent: (e) => log('tutorialevent: ' + JSON.stringify(e).slice(0, 200)),
+      onWorkspaceSave: () => {},
+    },
+    () => iframe
+  );
+
+  driver.initialize();
+  window.__driver = driver;
+</script>
+</body>
+</html>
+</html>
