@@ -149,19 +149,23 @@
     flex:1;
     min-height:0;
     margin: 0 auto;
+    position:relative;
   }
   @media (orientation: landscape){
     .editor-frame{ width:90%; max-width:1400px; }
   }
   .editor-frame iframe{
-    width:100%;
-    flex:1;
-    min-width:0;
-    min-height:0;
+    position:absolute;
+    inset:14px;
+    width:calc(100% - 28px);
+    height:calc(100% - 28px);
     border:none;
     border-radius:14px;
     background:var(--surface-2);
+    opacity:0;
+    transition:opacity .3s ease;
   }
+  .editor-frame iframe.ready{ opacity:1; }
   .fallback-link{
     align-self:center;
     font-size:.85rem;
@@ -174,6 +178,8 @@
     font-family:'Nunito Sans', sans-serif;
     font-size:.95rem;
     text-align:center;
+    position:relative;
+    z-index:1;
   }
 
   .celebrate-card{
@@ -323,7 +329,6 @@
   var iframe = document.createElement('iframe');
   iframe.allow = 'usb; autoplay; camera; microphone;';
   iframe.title = 'Editor MakeCode - Botão e Ícone';
-  iframe.style.display = 'none';
   frame.appendChild(iframe);
 
   iframe.src = createMakeCodeURL('https://makecode.microbit.org', undefined, undefined, 1, undefined);
@@ -344,7 +349,7 @@
           title: 'Botao e Icone',
         }).then(function(){
           if (statusEl) { statusEl.remove(); statusEl = null; }
-          iframe.style.display = 'block';
+          iframe.classList.add('ready');
         }).catch(function(e){
           setStatus('Não deu pra carregar o editor aqui dentro. Use o link abaixo pra abrir numa aba nova.');
           console.error('startActivity ERRO', e);
