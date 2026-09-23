@@ -5,6 +5,7 @@
         "core": "*"
     },
     "files": [
-        "piloto.md"
+        "piloto.md",
+        "shake-shake.md"
     ]
 }
