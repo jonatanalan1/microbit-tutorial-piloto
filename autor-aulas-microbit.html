@@ -699,8 +699,8 @@ function apiGithub(path, opcoes){
 // ainda, isso fica pra depois). caminho e titulo já vêm prontos, então
 // essa página nasce fixa pra essa aula (não usa formulário nem querystring).
 function gerarPaginaAulaHtml(caminho, titulo){
-  // troca "</" por "<\/" pra um titulo/caminho com "</script>" dentro nao
-  // fechar a tag <script> da pagina gerada e quebrar o HTML.
+  // troca "</" por "<\/" pra um titulo/caminho com a tag de fechamento de
+  // script dentro nao fechar a tag da pagina gerada e quebrar o HTML.
   var caminhoJs = JSON.stringify(caminho).replace(/<\//g, '<\\/');
   var tituloJs = JSON.stringify(titulo).replace(/<\//g, '<\\/');
   var tituloEsc = escapeHtml(titulo);
