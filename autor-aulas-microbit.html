@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar aula de micro:bit</title>
+<style>
+  :root{
+    --azul:#1a73e8;
+    --azul-escuro:#0b3d91;
+    --verde:#1e8e5a;
+    --vermelho:#c5221f;
+    --cinza-bg:#f4f6f8;
+    --cinza-borda:#d7dce1;
+    --cinza-texto:#3c4043;
+    --branco:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background:var(--cinza-bg);
+    color:var(--cinza-texto);
+    margin:0;
+    padding:24px;
+    line-height:1.45;
+  }
+  .container{max-width:900px;margin:0 auto;}
+  h1{font-size:22px;margin-bottom:4px;}
+  .subtitulo{color:#5f6368;margin-top:0;margin-bottom:20px;font-size:14px;}
+  .card{
+    background:var(--branco);
+    border:1px solid var(--cinza-borda);
+    border-radius:10px;
+    padding:18px 20px;
+    margin-bottom:18px;
+  }
+  .card h2{font-size:16px;margin:0 0 12px 0;}
+  .card h3{font-size:14px;margin:0 0 8px 0;color:#202124;}
+  label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;margin-top:10px;color:#202124;}
+  label:first-child{margin-top:0;}
+  input[type=text], input[type=number], input[type=password], textarea, select{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--cinza-borda);
+    border-radius:6px;
+    font-size:14px;
+    font-family:inherit;
+    background:var(--branco);
+    color:var(--cinza-texto);
+  }
+  textarea{resize:vertical;min-height:56px;}
+  .linha{display:flex;gap:12px;flex-wrap:wrap;}
+  .linha > div{flex:1;min-width:180px;}
+  button{
+    cursor:pointer;
+    border:none;
+    border-radius:6px;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:600;
+    font-family:inherit;
+  }
+  .btn-principal{background:var(--azul);color:#fff;}
+  .btn-principal:hover{background:var(--azul-escuro);}
+  .btn-secundario{background:#eef2f6;color:var(--cinza-texto);}
+  .btn-secundario:hover{background:#e2e7ec;}
+  .btn-perigo{background:#fdeceb;color:var(--vermelho);}
+  .btn-perigo:hover{background:#fadbd8;}
+  .btn-mini{padding:4px 8px;font-size:12px;border-radius:5px;}
+  .btn-grande{padding:12px 20px;font-size:15px;width:100%;}
+  .passo{
+    border:1px solid var(--cinza-borda);
+    border-radius:8px;
+    padding:14px 16px;
+    margin-bottom:14px;
+    background:#fafbfc;
+  }
+  .passo-topo{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .passo-topo strong{font-size:14px;}
+  .acoes{display:flex;gap:6px;flex-wrap:wrap;}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .chip{
+    background:#e8eefc;color:var(--azul-escuro);border:1px solid #c9d9f8;
+    border-radius:14px;padding:3px 10px;font-size:12px;cursor:pointer;
+  }
+  .chip:hover{background:#d9e5fb;}
+  .bloco-item{
+    display:flex;justify-content:space-between;align-items:center;
+    background:#fff;border:1px solid var(--cinza-borda);border-radius:6px;
+    padding:8px 10px;margin-top:8px;font-size:13px;
+  }
+  .bloco-item .info{flex:1;}
+  .bloco-item .tag-container{color:var(--verde);font-weight:600;font-size:11px;}
+  .bloco-item .dentro-de{color:#5f6368;font-size:11px;}
+  .form-add-bloco{
+    margin-top:10px;padding:12px;background:#fff;border:1px dashed var(--cinza-borda);border-radius:8px;
+  }
+  .preview{
+    background:#0d1117;color:#c9d1d9;padding:14px;border-radius:8px;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size:12.5px;white-space:pre-wrap;word-break:break-word;
+    max-height:420px;overflow:auto;
+  }
+  .msg{padding:10px 12px;border-radius:6px;font-size:13px;margin-top:10px;}
+  .msg-ok{background:#e6f4ea;color:var(--verde);}
+  .msg-erro{background:#fdeceb;color:var(--vermelho);}
+  .msg-info{background:#e8f0fe;color:var(--azul-escuro);}
+  .ajuda{font-size:12px;color:#5f6368;margin-top:4px;}
+  .selo-token{font-size:12px;padding:2px 8px;border-radius:10px;background:#e6f4ea;color:var(--verde);}
+  .selo-token.sem{background:#fdeceb;color:var(--vermelho);}
+  details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--azul-escuro);}
+  .rodape{text-align:center;font-size:12px;color:#80868b;margin-top:24px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Criar aula de micro:bit</h1>
+  <p class="subtitulo">Monte os passos e os blocos da aula. Ao salvar, isso gera o arquivo da aula e atualiza a lista de arquivos direto no GitHub.</p>
+
+  <div class="card" id="card-token">
+    <h2>Acesso ao GitHub <span id="selo-token" class="selo-token sem">sem token salvo</span></h2>
+    <div class="linha">
+      <div>
+        <label>Usuário/organização do GitHub</label>
+        <input type="text" id="campo-owner">
+      </div>
+      <div>
+        <label>Nome do repositório</label>
+        <input type="text" id="campo-repo">
+      </div>
+    </div>
+    <label>Token pessoal de acesso (fine-grained, só de escrita nesse repositório)</label>
+    <input type="password" id="campo-token" placeholder="github_pat_xxxxxxxxxxxxxxxxxxxx">
+    <p class="ajuda">O token fica salvo só neste navegador (não vai pro código, não sai daqui). Se ainda não gerou o token, veja o passo a passo abaixo.</p>
+    <div class="acoes" style="margin-top:8px;">
+      <button class="btn-principal btn-mini" onclick="salvarConfigGithub()">Salvar acesso</button>
+      <button class="btn-perigo btn-mini" onclick="apagarConfigGithub()">Apagar token salvo</button>
+    </div>
+    <details style="margin-top:12px;">
+      <summary>Como gerar o token (fazer só uma vez)</summary>
+      <ol style="font-size:13px;color:#3c4043;">
+        <li>No GitHub, vá em Settings da sua conta &gt; Developer settings &gt; Personal access tokens &gt; Fine-grained tokens &gt; Generate new token.</li>
+        <li>Em "Repository access", escolha "Only select repositories" e selecione o repositório da aula.</li>
+        <li>Em "Permissions" &gt; "Repository permissions", ache "Contents" e mude de "No access" para "Read and write".</li>
+        <li>Defina uma validade (ex: 1 ano) e clique em "Generate token".</li>
+        <li>Copie o código gerado (começa com <code>github_pat_</code>) e cole no campo acima.</li>
+      </ol>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2>Dados da aula</h2>
+    <div class="linha">
+      <div>
+        <label>Nome da aula</label>
+        <input type="text" id="campo-aula-nome" placeholder="Ex: Botão e Ícone" oninput="onAulaNomeChange()">
+      </div>
+      <div>
+        <label>Nome do arquivo (sem espaço, sem acento)</label>
+        <input type="text" id="campo-arquivo-nome" placeholder="Ex: botao-e-icone" oninput="onArquivoNomeChange(true)">
+      </div>
+    </div>
+    <p class="ajuda">Caminho que vai ser usado na página da aula: <code id="preview-caminho">github:.../...</code></p>
+  </div>
+
+  <div class="card">
+    <h2>Passos da aula</h2>
+    <div id="lista-passos"></div>
+    <button class="btn-secundario" onclick="adicionarPasso()">+ Adicionar passo</button>
+  </div>
+
+  <div class="card">
+    <h2>Pré-visualização do arquivo</h2>
+    <div class="preview" id="preview-markdown"></div>
+    <div class="acoes" style="margin-top:10px;">
+      <button class="btn-secundario btn-mini" onclick="copiarPreview()">Copiar conteúdo</button>
+      <button class="btn-secundario btn-mini" onclick="baixarMd()">Baixar .md</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Salvar</h2>
+    <button class="btn-principal btn-grande" onclick="salvarNoGithub()">Salvar aula no GitHub</button>
+    <div id="area-mensagem"></div>
+  </div>
+
+  <p class="rodape">Ferramenta de autoria interna. Feita pra uso próprio, sem depender de mais ninguém pra criar aula nova.</p>
+</div>
+
+<script>
+/* ==================== CATÁLOGO DE BLOCOS ====================
+   Cada bloco tem: id, categoria, label (descrição em português),
+   hint (texto category:nome usado na instrução, estilo do MakeCode),
+   container (true = pode ter outros blocos dentro),
+   params (lista de campos que aparecem ao adicionar o bloco),
+   render(valores, filhosGerados) -> devolve o código do bloco.
+   Pra adicionar um bloco novo no catálogo, é só copiar um exemplo
+   parecido e ajustar id/label/hint/params/render.
+================================================================ */
+
+function indent(texto, n){
+  if(!texto) return '';
+  var pad = ' '.repeat(n);
+  return texto.split('\n').map(function(l){return pad+l;}).join('\n');
+}
+function escJs(s){
+  return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+}
+
+var ICONES = [
+  ['Heart','Coração'], ['SmallHeart','Coraçãozinho'], ['Yes','Certo (V)'], ['No','Errado (X)'],
+  ['Happy','Feliz'], ['Sad','Triste'], ['Confused','Confuso'], ['Angry','Bravo'],
+  ['Asleep','Dormindo'], ['Surprised','Surpreso'], ['Silly','Bobo'], ['Fabulous','Estiloso'],
+  ['Meh','Sem graça'], ['TShirt','Camiseta'], ['Duck','Pato'], ['House','Casa'],
+  ['Butterfly','Borboleta'], ['Ghost','Fantasma'], ['Umbrella','Guarda-chuva'], ['Target','Alvo'],
+  ['Diamond','Diamante'], ['Square','Quadrado'], ['Triangle','Triângulo'], ['Rabbit','Coelho'],
+  ['Cow','Vaca'], ['Giraffe','Girafa'], ['Snake','Cobra'], ['Skull','Caveira']
+];
+var GESTOS = [
+  ['Shake','Balançar'], ['LogoUp','Logo pra cima (em pé)'], ['LogoDown','Logo pra baixo (de cabeça pra baixo)'],
+  ['ScreenUp','Tela pra cima'], ['ScreenDown','Tela pra baixo'], ['TiltLeft','Inclinar pra esquerda'],
+  ['TiltRight','Inclinar pra direita'], ['FreeFall','Queda livre'], ['ThreeG','Batida forte (3g)'],
+  ['SixG','Batida bem forte (6g)']
+];
+var NOTAS = [['C','Dó'],['D','Ré'],['E','Mi'],['F','Fá'],['G','Sol'],['A','Lá'],['B','Si']];
+var DURACOES = [['Whole','Bem longa'],['Half','Longa'],['Quarter','Média'],['Eighth','Curta'],['Sixteenth','Bem curta']];
+var MELODIAS = [
+  ['Birthday','Aniversário'], ['Wedding','Casamento'], ['Entertainer','Animada'],
+  ['JumpUp','Pulo pra cima'], ['JumpDown','Pulo pra baixo'], ['PowerUp','Ligando'],
+  ['PowerDown','Desligando'], ['Nyan','Nyan cat'], ['BaDing','Ding'], ['Chase','Perseguição']
+];
+var PINOS_TOQUE = [['P0','Pino 0'],['P1','Pino 1'],['P2','Pino 2']];
+
+var CATALOG = [
+  {id:'mostrar_icone', categoria:'Básico', label:'Mostrar um ícone na tela', hint:'basic:mostrar ícone', container:false,
+    params:[{key:'icone', label:'Qual ícone', type:'select', options:ICONES}],
+    render:function(v){ return 'basic.showIcon(IconNames.'+v.icone+')'; }},
+
+  {id:'mostrar_texto', categoria:'Básico', label:'Mostrar um texto na tela (letra por letra)', hint:'basic:mostrar texto', container:false,
+    params:[{key:'texto', label:'Qual texto', type:'text', def:'Oi!'}],
+    render:function(v){ return 'basic.showString("'+escJs(v.texto)+'")'; }},
+
+  {id:'mostrar_numero', categoria:'Básico', label:'Mostrar um número na tela', hint:'basic:mostrar número', container:false,
+    params:[{key:'numero', label:'Qual número', type:'number', def:1}],
+    render:function(v){ return 'basic.showNumber('+v.numero+')'; }},
+
+  {id:'limpar_tela', categoria:'Básico', label:'Apagar tudo que está na tela', hint:'basic:limpar tela', container:false,
+    params:[],
+    render:function(v){ return 'basic.clearScreen()'; }},
+
+  {id:'pausar', categoria:'Básico', label:'Esperar um tempo (em milissegundos)', hint:'basic:pausar', container:false,
+    params:[{key:'ms', label:'Quantos milissegundos (1000 = 1 segundo)', type:'number', def:1000}],
+    render:function(v){ return 'basic.pause('+v.ms+')'; }},
+
+  {id:'sempre', categoria:'Básico', label:'Repetir para sempre, sem parar', hint:'basic:sempre', container:true,
+    params:[],
+    render:function(v,c){ return 'basic.forever(function () {\n'+indent(c,4)+'\n})'; }},
+
+  {id:'ao_pressionar_botao', categoria:'Entrada', label:'Quando apertar um botão', hint:'input:ao pressionar botão', container:true,
+    params:[{key:'botao', label:'Qual botão', type:'select', options:[['A','Botão A'],['B','Botão B'],['AB','Botões A + B juntos']]}],
+    render:function(v,c){ return 'input.onButtonPressed(Button.'+v.botao+', function () {\n'+indent(c,4)+'\n})'; }},
+
+  {id:'ao_mover', categoria:'Entrada', label:'Quando fizer um movimento com o micro:bit', hint:'input:ao mover', container:true,
+    params:[{key:'gesto', label:'Qual movimento', type:'select', options:GESTOS}],
+    render:function(v,c){ return 'input.onGesture(Gesture.'+v.gesto+', function () {\n'+indent(c,4)+'\n})'; }},
+
+  {id:'ao_tocar_pino', categoria:'Entrada', label:'Quando tocar em um pino (com o dedo ou fio)', hint:'input:ao tocar no pino', container:true,
+    params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}],
+    render:function(v,c){ return 'input.onPinPressed(TouchPin.'+v.pino+', function () {\n'+indent(c,4)+'\n})'; }},
+
+  {id:'tocar_tom', categoria:'Música', label:'Tocar uma nota musical', hint:'música:tocar tom', container:false,
+    params:[{key:'nota', label:'Qual nota', type:'select', options:NOTAS}, {key:'duracao', label:'Por quanto tempo', type:'select', options:DURACOES}],
+    render:function(v){ return 'music.playTone(Note.'+v.nota+', music.beat(BeatFraction.'+v.duracao+'))'; }},
+
+  {id:'tocar_melodia', categoria:'Música', label:'Tocar uma melodia pronta', hint:'música:tocar melodia', container:false,
+    params:[{key:'melodia', label:'Qual melodia', type:'select', options:MELODIAS}],
+    render:function(v){ return 'music.startMelody(music.builtInMelody(Melodies.'+v.melodia+'), MelodyOptions.Once)'; }},
+
+  {id:'descansar', categoria:'Música', label:'Fazer silêncio por um tempo (pausa musical)', hint:'música:descansar', container:false,
+    params:[{key:'duracao', label:'Por quanto tempo', type:'select', options:DURACOES}],
+    render:function(v){ return 'music.rest(music.beat(BeatFraction.'+v.duracao+'))'; }},
+
+  {id:'acender_ponto', categoria:'Tela de LEDs', label:'Acender um ponto específico da tela', hint:'led:acender ponto', container:false,
+    params:[{key:'x', label:'Posição X (0 a 4, da esquerda pra direita)', type:'number', def:0}, {key:'y', label:'Posição Y (0 a 4, de cima pra baixo)', type:'number', def:0}],
+    render:function(v){ return 'led.plot('+v.x+', '+v.y+')'; }},
+
+  {id:'apagar_ponto', categoria:'Tela de LEDs', label:'Apagar um ponto específico da tela', hint:'led:apagar ponto', container:false,
+    params:[{key:'x', label:'Posição X (0 a 4)', type:'number', def:0}, {key:'y', label:'Posição Y (0 a 4)', type:'number', def:0}],
+    render:function(v){ return 'led.unplot('+v.x+', '+v.y+')'; }},
+
+  {id:'alternar_ponto', categoria:'Tela de LEDs', label:'Alternar um ponto (acende se tá apagado, apaga se tá aceso)', hint:'led:alternar ponto', container:false,
+    params:[{key:'x', label:'Posição X (0 a 4)', type:'number', def:0}, {key:'y', label:'Posição Y (0 a 4)', type:'number', def:0}],
+    render:function(v){ return 'led.toggle('+v.x+', '+v.y+')'; }},
+
+  {id:'repetir_x_vezes', categoria:'Repetição', label:'Repetir um número certo de vezes', hint:'loops:repetir', container:true,
+    params:[{key:'vezes', label:'Quantas vezes repetir', type:'number', def:4}],
+    render:function(v,c){ return 'for (let i = 0; i < '+v.vezes+'; i++) {\n'+indent(c,4)+'\n}'; }},
+
+  {id:'escrever_digital', categoria:'Pinos', label:'Ligar ou desligar um pino (sinal digital)', hint:'pinos:escrever digital', container:false,
+    params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}, {key:'valor', label:'Ligado ou desligado', type:'select', options:[['1','Ligado (1)'],['0','Desligado (0)']]}],
+    render:function(v){ return 'pins.digitalWritePin(DigitalPin.'+v.pino+', '+v.valor+')'; }},
+
+  {id:'radio_enviar_numero', categoria:'Rádio', label:'Enviar um número pelo rádio pra outro micro:bit', hint:'rádio:enviar número', container:false,
+    params:[{key:'numero', label:'Qual número enviar', type:'number', def:1}],
+    render:function(v){ return 'radio.sendNumber('+v.numero+')'; }},
+
+  {id:'radio_ao_receber_numero', categoria:'Rádio', label:'Quando receber um número pelo rádio', hint:'rádio:ao receber número', container:true,
+    params:[],
+    render:function(v,c){ return 'radio.onReceivedNumber(function (receivedNumber) {\n'+indent(c,4)+'\n})'; }}
+];
+var CATALOG_MAP = {};
+CATALOG.forEach(function(c){ CATALOG_MAP[c.id] = c; });
+var CATEGORIAS = [];
+CATALOG.forEach(function(c){ if(CATEGORIAS.indexOf(c.categoria)===-1) CATEGORIAS.push(c.categoria); });
+
+/* ==================== ESTADO ==================== */
+var state = {
+  aulaNome:'', arquivoNome:'',
+  passos:[] // {id, texto, blocos:[{id, catalogId, dentroDe, values}]}
+};
+var uid = 1;
+function novoId(prefixo){ return prefixo+(uid++); }
+
+// controla qual passo tem o formulário de "adicionar bloco" aberto, e se está editando
+var uiAddBloco = {}; // { [passoId]: {catalogId, values, dentroDe, editandoBlocoId} }
+
+function salvarRascunho(){
+  try{ localStorage.setItem('autor_microbit_rascunho', JSON.stringify(state)); }catch(e){}
+}
+function carregarRascunho(){
+  try{
+    var r = localStorage.getItem('autor_microbit_rascunho');
+    if(r){ var obj = JSON.parse(r); if(obj && obj.passos) state = obj; }
+  }catch(e){}
+}
+
+/* ==================== GERAÇÃO DO MARKDOWN ==================== */
+function renderNode(bloco, todos){
+  var entry = CATALOG_MAP[bloco.catalogId];
+  var filhosCodigo = '';
+  if(entry.container){
+    var filhos = todos.filter(function(b){ return b.dentroDe === bloco.id; });
+    filhosCodigo = filhos.map(function(f){ return renderNode(f, todos); }).join('\n');
+  }
+  return entry.render(bloco.values, filhosCodigo);
+}
+function renderPassoCodigo(passo){
+  var topo = passo.blocos.filter(function(b){ return !b.dentroDe; });
+  return topo.map(function(b){ return renderNode(b, passo.blocos); }).join('\n');
+}
+function gerarMarkdown(){
+  var titulo = state.aulaNome || '(nome da aula)';
+  var partes = ['# '+titulo];
+  state.passos.forEach(function(passo, i){
+    var codigo = renderPassoCodigo(passo);
+    var bloco = '## {Step '+(i+1)+'}\n\n'+(passo.texto||'').trim();
+    if(codigo.trim()){
+      bloco += '\n\n```blocks\n'+codigo+'\n```';
+    }
+    partes.push(bloco);
+  });
+  return partes.join('\n\n')+'\n';
+}
+
+/* ==================== UTIL ==================== */
+function slug(txt){
+  return (txt||'').toString().normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+function escapeHtml(s){
+  return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function opt(value, label, selecionado){
+  return '<option value="'+escapeHtml(value)+'"'+(selecionado===value?' selected':'')+'>'+escapeHtml(label)+'</option>';
+}
+
+/* ==================== EVENTOS: dados da aula ==================== */
+var arquivoNomeEditadoManual = false;
+function onAulaNomeChange(){
+  state.aulaNome = document.getElementById('campo-aula-nome').value;
+  if(!arquivoNomeEditadoManual){
+    state.arquivoNome = slug(state.aulaNome);
+    document.getElementById('campo-arquivo-nome').value = state.arquivoNome;
+  }
+  salvarRascunho();
+  render();
+}
+function onArquivoNomeChange(manual){
+  if(manual) arquivoNomeEditadoManual = true;
+  state.arquivoNome = slug(document.getElementById('campo-arquivo-nome').value);
+  salvarRascunho();
+  render();
+}
+
+/* ==================== PASSOS ==================== */
+function adicionarPasso(){
+  state.passos.push({id:novoId('p'), texto:'', blocos:[]});
+  salvarRascunho();
+  render();
+}
+function removerPasso(passoId){
+  if(!confirm('Remover este passo e todos os blocos dele?')) return;
+  state.passos = state.passos.filter(function(p){ return p.id!==passoId; });
+  salvarRascunho();
+  render();
+}
+function moverPasso(passoId, direcao){
+  var i = state.passos.findIndex(function(p){ return p.id===passoId; });
+  var j = i+direcao;
+  if(j<0 || j>=state.passos.length) return;
+  var tmp = state.passos[i]; state.passos[i]=state.passos[j]; state.passos[j]=tmp;
+  salvarRascunho();
+  render();
+}
+function duplicarBlocosDoAnterior(passoId){
+  var i = state.passos.findIndex(function(p){ return p.id===passoId; });
+  if(i<=0) return;
+  var anterior = state.passos[i-1];
+  var mapaIds = {};
+  var copiados = anterior.blocos.map(function(b){
+    var novo = {id:novoId('b'), catalogId:b.catalogId, dentroDe:null, values:Object.assign({}, b.values)};
+    mapaIds[b.id] = novo.id;
+    return novo;
+  });
+  copiados.forEach(function(b, idx){
+    var original = anterior.blocos[idx];
+    b.dentroDe = original.dentroDe ? mapaIds[original.dentroDe] : null;
+  });
+  state.passos[i].blocos = state.passos[i].blocos.concat(copiados);
+  salvarRascunho();
+  render();
+}
+function onTextoPassoChange(passoId, valor){
+  var p = state.passos.find(function(p){ return p.id===passoId; });
+  p.texto = valor;
+  salvarRascunho();
+}
+function inserirHintNoTexto(passoId, hint){
+  var textarea = document.getElementById('texto-'+passoId);
+  var marcador = '``||'+hint+'||``';
+  var inicio = textarea.selectionStart, fim = textarea.selectionEnd;
+  var valor = textarea.value;
+  textarea.value = valor.slice(0,inicio)+marcador+valor.slice(fim);
+  onTextoPassoChange(passoId, textarea.value);
+  render();
+}
+
+/* ==================== BLOCOS ==================== */
+function abrirFormAddBloco(passoId){
+  var primeiraCategoria = CATEGORIAS[0];
+  var primeiroBloco = CATALOG.filter(function(c){return c.categoria===primeiraCategoria;})[0];
+  uiAddBloco[passoId] = {catalogId:primeiroBloco.id, values:valoresPadrao(primeiroBloco), dentroDe:'', editandoBlocoId:null};
+  render();
+}
+function fecharFormAddBloco(passoId){
+  delete uiAddBloco[passoId];
+  render();
+}
+function valoresPadrao(entry){
+  var v = {};
+  entry.params.forEach(function(p){
+    if(p.type==='select') v[p.key] = p.options[0][0];
+    else v[p.key] = (p.def!==undefined? p.def : '');
+  });
+  return v;
+}
+function onTrocaCategoriaBloco(passoId, categoria){
+  var primeiro = CATALOG.filter(function(c){return c.categoria===categoria;})[0];
+  uiAddBloco[passoId].catalogId = primeiro.id;
+  uiAddBloco[passoId].values = valoresPadrao(primeiro);
+  render();
+}
+function onTrocaTipoBloco(passoId, catalogId){
+  var entry = CATALOG_MAP[catalogId];
+  uiAddBloco[passoId].catalogId = catalogId;
+  uiAddBloco[passoId].values = valoresPadrao(entry);
+  render();
+}
+function onMudaParamBloco(passoId, chave, valor){
+  uiAddBloco[passoId].values[chave] = valor;
+}
+function onMudaDentroDe(passoId, valor){
+  uiAddBloco[passoId].dentroDe = valor;
+}
+function salvarBlocoDoForm(passoId){
+  var ui = uiAddBloco[passoId];
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  if(ui.editandoBlocoId){
+    var b = passo.blocos.find(function(b){ return b.id===ui.editandoBlocoId; });
+    b.catalogId = ui.catalogId;
+    b.values = Object.assign({}, ui.values);
+    b.dentroDe = ui.dentroDe || null;
+  } else {
+    passo.blocos.push({id:novoId('b'), catalogId:ui.catalogId, values:Object.assign({}, ui.values), dentroDe: ui.dentroDe || null});
+  }
+  delete uiAddBloco[passoId];
+  salvarRascunho();
+  render();
+}
+function editarBloco(passoId, blocoId){
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  var b = passo.blocos.find(function(b){ return b.id===blocoId; });
+  uiAddBloco[passoId] = {catalogId:b.catalogId, values:Object.assign({}, b.values), dentroDe:b.dentroDe||'', editandoBlocoId:b.id};
+  render();
+}
+function removerBloco(passoId, blocoId){
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  // reencaixa os filhos desse bloco no nível de cima, em vez de apagar junto
+  passo.blocos.forEach(function(b){ if(b.dentroDe===blocoId) b.dentroDe=null; });
+  passo.blocos = passo.blocos.filter(function(b){ return b.id!==blocoId; });
+  salvarRascunho();
+  render();
+}
+function moverBloco(passoId, blocoId, direcao){
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  var i = passo.blocos.findIndex(function(b){ return b.id===blocoId; });
+  var j = i+direcao;
+  if(j<0 || j>=passo.blocos.length) return;
+  var tmp = passo.blocos[i]; passo.blocos[i]=passo.blocos[j]; passo.blocos[j]=tmp;
+  salvarRascunho();
+  render();
+}
+function resumoBloco(b){
+  var entry = CATALOG_MAP[b.catalogId];
+  var partes = entry.params.map(function(p){
+    var val = b.values[p.key];
+    if(p.type==='select'){
+      var achou = p.options.find(function(o){return o[0]===val;});
+      return achou? achou[1] : val;
+    }
+    return val;
+  });
+  return entry.label + (partes.length? ' — '+partes.join(', ') : '');
+}
+
+/* ==================== RENDER ==================== */
+function render(){
+  renderListaPassos();
+  document.getElementById('preview-markdown').textContent = gerarMarkdown();
+  var owner = document.getElementById('campo-owner').value || CONFIG.owner;
+  var repo = document.getElementById('campo-repo').value || CONFIG.repo;
+  document.getElementById('preview-caminho').textContent = 'github:'+owner+'/'+repo+'/'+(state.arquivoNome||'nome-do-arquivo');
+}
+
+function renderListaPassos(){
+  var html = '';
+  state.passos.forEach(function(passo, i){
+    html += '<div class="passo">';
+    html += '<div class="passo-topo"><strong>Passo '+(i+1)+'</strong><div class="acoes">';
+    html += '<button class="btn-secundario btn-mini" onclick="moverPasso(\''+passo.id+'\',-1)" '+(i===0?'disabled':'')+'>▲</button>';
+    html += '<button class="btn-secundario btn-mini" onclick="moverPasso(\''+passo.id+'\',1)" '+(i===state.passos.length-1?'disabled':'')+'>▼</button>';
+    if(i>0) html += '<button class="btn-secundario btn-mini" onclick="duplicarBlocosDoAnterior(\''+passo.id+'\')">copiar blocos do passo anterior</button>';
+    html += '<button class="btn-perigo btn-mini" onclick="removerPasso(\''+passo.id+'\')">remover passo</button>';
+    html += '</div></div>';
+
+    html += '<label>Texto do passo (o que a criança vai ler)</label>';
+    html += '<textarea id="texto-'+passo.id+'" oninput="onTextoPassoChange(\''+passo.id+'\', this.value)">'+escapeHtml(passo.texto)+'</textarea>';
+
+    if(passo.blocos.length){
+      html += '<div class="chips">';
+      passo.blocos.forEach(function(b){
+        var entry = CATALOG_MAP[b.catalogId];
+        html += '<span class="chip" title="clique pra citar esse bloco no texto" onclick="inserirHintNoTexto(\''+passo.id+'\',\''+entry.hint+'\')">'+escapeHtml(entry.hint)+'</span>';
+      });
+      html += '</div>';
+    }
+
+    html += '<div>';
+    passo.blocos.forEach(function(b){
+      var entry = CATALOG_MAP[b.catalogId];
+      html += '<div class="bloco-item"><div class="info">'+escapeHtml(resumoBloco(b));
+      if(entry.container) html += ' <span class="tag-container">(pode ter blocos dentro)</span>';
+      if(b.dentroDe){
+        var pai = passo.blocos.find(function(x){return x.id===b.dentroDe;});
+        if(pai) html += '<br><span class="dentro-de">encaixado dentro de: '+escapeHtml(resumoBloco(pai))+'</span>';
+      }
+      html += '</div><div class="acoes">';
+      html += '<button class="btn-secundario btn-mini" onclick="moverBloco(\''+passo.id+'\',\''+b.id+'\',-1)">▲</button>';
+      html += '<button class="btn-secundario btn-mini" onclick="moverBloco(\''+passo.id+'\',\''+b.id+'\',1)">▼</button>';
+      html += '<button class="btn-secundario btn-mini" onclick="editarBloco(\''+passo.id+'\',\''+b.id+'\')">editar</button>';
+      html += '<button class="btn-perigo btn-mini" onclick="removerBloco(\''+passo.id+'\',\''+b.id+'\')">remover</button>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+
+    if(uiAddBloco[passo.id]){
+      html += renderFormAddBloco(passo);
+    } else {
+      html += '<div style="margin-top:10px;"><button class="btn-secundario btn-mini" onclick="abrirFormAddBloco(\''+passo.id+'\')">+ Adicionar bloco</button></div>';
+    }
+
+    html += '</div>';
+  });
+  document.getElementById('lista-passos').innerHTML = html;
+}
+
+function renderFormAddBloco(passo){
+  var ui = uiAddBloco[passo.id];
+  var entry = CATALOG_MAP[ui.catalogId];
+  var html = '<div class="form-add-bloco">';
+  html += '<h3>'+(ui.editandoBlocoId? 'Editar bloco' : 'Adicionar bloco')+'</h3>';
+
+  html += '<label>Categoria</label><select onchange="onTrocaCategoriaBloco(\''+passo.id+'\', this.value)">';
+  CATEGORIAS.forEach(function(cat){ html += opt(cat, cat, entry.categoria); });
+  html += '</select>';
+
+  html += '<label>Bloco</label><select onchange="onTrocaTipoBloco(\''+passo.id+'\', this.value)">';
+  CATALOG.filter(function(c){return c.categoria===entry.categoria;}).forEach(function(c){
+    html += opt(c.id, c.label, entry.id);
+  });
+  html += '</select>';
+
+  entry.params.forEach(function(p){
+    html += '<label>'+escapeHtml(p.label)+'</label>';
+    if(p.type==='select'){
+      html += '<select onchange="onMudaParamBloco(\''+passo.id+'\',\''+p.key+'\', this.value)">';
+      p.options.forEach(function(o){ html += opt(o[0], o[1], ui.values[p.key]); });
+      html += '</select>';
+    } else if(p.type==='number'){
+      html += '<input type="number" value="'+escapeHtml(ui.values[p.key])+'" oninput="onMudaParamBloco(\''+passo.id+'\',\''+p.key+'\', this.value)">';
+    } else {
+      html += '<input type="text" value="'+escapeHtml(ui.values[p.key])+'" oninput="onMudaParamBloco(\''+passo.id+'\',\''+p.key+'\', this.value)">';
+    }
+  });
+
+  var candidatosContainer = passo.blocos.filter(function(b){
+    return CATALOG_MAP[b.catalogId].container && b.id!==ui.editandoBlocoId;
+  });
+  html += '<label>Encaixar dentro de outro bloco?</label><select onchange="onMudaDentroDe(\''+passo.id+'\', this.value)">';
+  html += opt('', 'Não, deixa solto', ui.dentroDe||'');
+  candidatosContainer.forEach(function(c){ html += opt(c.id, resumoBloco(c), ui.dentroDe||''); });
+  html += '</select>';
+
+  html += '<div class="acoes" style="margin-top:10px;">';
+  html += '<button class="btn-principal btn-mini" onclick="salvarBlocoDoForm(\''+passo.id+'\')">'+(ui.editandoBlocoId?'Salvar alterações':'Adicionar')+'</button>';
+  html += '<button class="btn-secundario btn-mini" onclick="fecharFormAddBloco(\''+passo.id+'\')">Cancelar</button>';
+  html += '</div></div>';
+  return html;
+}
+
+/* ==================== CONFIG / TOKEN GITHUB ==================== */
+var CONFIG = {owner:'jonatanalan1', repo:'microbit-tutorial-piloto', token:''};
+function carregarConfigGithub(){
+  try{
+    var r = localStorage.getItem('autor_microbit_config');
+    if(r){ var obj = JSON.parse(r); CONFIG = Object.assign(CONFIG, obj); }
+  }catch(e){}
+  document.getElementById('campo-owner').value = CONFIG.owner;
+  document.getElementById('campo-repo').value = CONFIG.repo;
+  document.getElementById('campo-token').value = CONFIG.token;
+  atualizarSeloToken();
+}
+function salvarConfigGithub(){
+  CONFIG.owner = document.getElementById('campo-owner').value.trim();
+  CONFIG.repo = document.getElementById('campo-repo').value.trim();
+  CONFIG.token = document.getElementById('campo-token').value.trim();
+  localStorage.setItem('autor_microbit_config', JSON.stringify(CONFIG));
+  atualizarSeloToken();
+  render();
+  mostrarMensagem('info','Acesso salvo neste navegador.');
+}
+function apagarConfigGithub(){
+  if(!confirm('Apagar o token salvo neste navegador?')) return;
+  CONFIG.token = '';
+  document.getElementById('campo-token').value = '';
+  localStorage.setItem('autor_microbit_config', JSON.stringify(CONFIG));
+  atualizarSeloToken();
+}
+function atualizarSeloToken(){
+  var selo = document.getElementById('selo-token');
+  if(CONFIG.token){ selo.textContent = 'token salvo'; selo.classList.remove('sem'); }
+  else { selo.textContent = 'sem token salvo'; selo.classList.add('sem'); }
+}
+
+/* ==================== SALVAR NO GITHUB ==================== */
+function utf8ToBase64(str){
+  var bytes = new TextEncoder().encode(str);
+  var binary = '';
+  bytes.forEach(function(b){ binary += String.fromCharCode(b); });
+  return btoa(binary);
+}
+function mostrarMensagem(tipo, texto){
+  var classe = tipo==='ok'?'msg-ok':(tipo==='erro'?'msg-erro':'msg-info');
+  document.getElementById('area-mensagem').innerHTML = '<div class="msg '+classe+'">'+texto+'</div>';
+}
+function apiGithub(path, opcoes){
+  opcoes = opcoes || {};
+  var headers = Object.assign({
+    'Authorization': 'token '+CONFIG.token,
+    'Accept': 'application/vnd.github+json'
+  }, opcoes.headers||{});
+  return fetch('https://api.github.com/repos/'+CONFIG.owner+'/'+CONFIG.repo+'/'+path, Object.assign({}, opcoes, {headers:headers}));
+}
+async function salvarNoGithub(){
+  if(!CONFIG.token){ mostrarMensagem('erro','Cola o token de acesso lá em cima antes de salvar.'); return; }
+  if(!state.aulaNome.trim()){ mostrarMensagem('erro','Falta o nome da aula.'); return; }
+  if(!state.arquivoNome.trim()){ mostrarMensagem('erro','Falta o nome do arquivo.'); return; }
+  if(!state.passos.length){ mostrarMensagem('erro','Adiciona pelo menos um passo antes de salvar.'); return; }
+
+  var nomeArquivo = state.arquivoNome+'.md';
+  mostrarMensagem('info','Salvando...');
+
+  try{
+    // 1) pxt.json: garante que o arquivo novo está listado
+    var respPxt = await apiGithub('contents/pxt.json');
+    if(!respPxt.ok){ throw new Error('Não consegui ler o pxt.json (código '+respPxt.status+'). Confere o token e o nome do repositório.'); }
+    var pxtInfo = await respPxt.json();
+    var pxtJson = JSON.parse(decodeURIComponent(escape(atob(pxtInfo.content.replace(/\n/g,'')))));
+    if(!pxtJson.files) pxtJson.files = [];
+    if(pxtJson.files.indexOf(nomeArquivo)===-1){
+      pxtJson.files.push(nomeArquivo);
+      var putPxt = await apiGithub('contents/pxt.json', {
+        method:'PUT',
+        body: JSON.stringify({
+          message: 'Adiciona '+nomeArquivo+' na lista de aulas',
+          content: utf8ToBase64(JSON.stringify(pxtJson, null, 4)+'\n'),
+          sha: pxtInfo.sha
+        })
+      });
+      if(!putPxt.ok){ var e1 = await putPxt.json().catch(function(){return {};}); throw new Error('Não consegui atualizar o pxt.json: '+(e1.message||putPxt.status)); }
+    }
+
+    // 2) verifica se o arquivo da aula já existe (pra saber se é criação ou atualização)
+    var respArq = await apiGithub('contents/'+nomeArquivo);
+    var shaExistente = null;
+    if(respArq.status===200){
+      var infoArq = await respArq.json();
+      shaExistente = infoArq.sha;
+      if(!confirm('Já existe um arquivo "'+nomeArquivo+'" nesse repositório. Quer sobrescrever com essa versão nova?')){
+        mostrarMensagem('info','Salvamento cancelado. Nada foi alterado.');
+        return;
+      }
+    } else if(respArq.status!==404){
+      throw new Error('Não consegui checar se o arquivo já existe (código '+respArq.status+').');
+    }
+
+    // 3) grava o arquivo da aula
+    var corpo = {
+      message: (shaExistente? 'Atualiza aula: ' : 'Cria aula: ')+state.aulaNome,
+      content: utf8ToBase64(gerarMarkdown())
+    };
+    if(shaExistente) corpo.sha = shaExistente;
+    var putArq = await apiGithub('contents/'+nomeArquivo, {method:'PUT', body: JSON.stringify(corpo)});
+    if(!putArq.ok){ var e2 = await putArq.json().catch(function(){return {};}); throw new Error('Não consegui salvar o arquivo da aula: '+(e2.message||putArq.status)); }
+
+    var caminho = 'github:'+CONFIG.owner+'/'+CONFIG.repo+'/'+state.arquivoNome;
+    mostrarMensagem('ok', 'Aula salva! Caminho pra usar na função iniciarEditorMicrobit: <code>'+caminho+'</code>');
+  } catch(err){
+    mostrarMensagem('erro', 'Deu erro: '+err.message);
+  }
+}
+
+/* ==================== EXTRAS ==================== */
+function copiarPreview(){
+  navigator.clipboard.writeText(gerarMarkdown()).then(function(){
+    mostrarMensagem('info','Conteúdo copiado.');
+  });
+}
+function baixarMd(){
+  var blob = new Blob([gerarMarkdown()], {type:'text/markdown'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (state.arquivoNome||'aula')+'.md';
+  a.click();
+}
+
+/* ==================== INÍCIO ==================== */
+carregarConfigGithub();
+carregarRascunho();
+if(state.aulaNome) arquivoNomeEditadoManual = true;
+document.getElementById('campo-aula-nome').value = state.aulaNome;
+document.getElementById('campo-arquivo-nome').value = state.arquivoNome;
+if(!state.passos.length) adicionarPasso();
+render();
+</script>
+</body>
+</html>
+
