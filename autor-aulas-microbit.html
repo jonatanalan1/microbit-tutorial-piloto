@@ -181,6 +181,7 @@
   <div class="card">
     <h2>Salvar</h2>
     <button class="btn-principal btn-grande" onclick="salvarNoGithub()">Salvar aula no GitHub</button>
+    <p class="ajuda">Isso salva o conteúdo da aula e já gera a página pronta pra abrir, com o editor MakeCode embutido.</p>
     <div id="area-mensagem"></div>
   </div>
 
@@ -691,6 +692,94 @@ function apiGithub(path, opcoes){
   }, opcoes.headers||{});
   return fetch('https://api.github.com/repos/'+CONFIG.owner+'/'+CONFIG.repo+'/'+path, Object.assign({}, opcoes, {headers:headers}));
 }
+
+// Gera a pagina HTML pronta da aula (link "embedado"), reaproveitando
+// exatamente o motor tecnico ja validado (iniciarEditorMicrobit).
+// Por enquanto é o visual genérico (sem slides estilizados pra criança
+// ainda, isso fica pra depois). caminho e titulo já vêm prontos, então
+// essa página nasce fixa pra essa aula (não usa formulário nem querystring).
+function gerarPaginaAulaHtml(caminho, titulo){
+  // troca "</" por "<\/" pra um titulo/caminho com "</script>" dentro nao
+  // fechar a tag <script> da pagina gerada e quebrar o HTML.
+  var caminhoJs = JSON.stringify(caminho).replace(/<\//g, '<\\/');
+  var tituloJs = JSON.stringify(titulo).replace(/<\//g, '<\\/');
+  var tituloEsc = escapeHtml(titulo);
+  var linkMakecode = 'https://makecode.microbit.org/#tutorial:'+encodeURIComponent(caminho).replace(/%3A/g,':').replace(/%2F/g,'/');
+  return '<!DOCTYPE html>\n'
+    + '<html lang="pt-BR">\n'
+    + '<head>\n'
+    + '<meta charset="UTF-8">\n'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
+    + '<title>'+tituloEsc+' — aula de micro:bit</title>\n'
+    + '<style>\n'
+    + '  *{box-sizing:border-box;}\n'
+    + '  html, body{height:100%;margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f6f8;color:#3c4043;}\n'
+    + '  #barra{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid #d7dce1;}\n'
+    + '  #barra h1{font-size:15px;margin:0;font-weight:600;}\n'
+    + '  #barra .status{font-size:12px;color:#5f6368;}\n'
+    + '  #link-alternativo{font-size:12px;color:#5f6368;}\n'
+    + '  #link-alternativo a{color:#1a73e8;}\n'
+    + '  #editor-container{height:calc(100% - 45px);width:100%;}\n'
+    + '  #editor-container iframe{width:100%;height:100%;border:none;display:block;}\n'
+    + '</style>\n'
+    + '</head>\n'
+    + '<body>\n'
+    + '<div id="barra">\n'
+    + '  <h1>'+tituloEsc+'</h1>\n'
+    + '  <div style="display:flex;align-items:center;gap:12px;">\n'
+    + '    <span class="status" id="status-carregamento">carregando...</span>\n'
+    + '    <span id="link-alternativo"><a href="'+linkMakecode+'" target="_blank">abrir em outra aba, se não carregar aqui</a></span>\n'
+    + '  </div>\n'
+    + '</div>\n'
+    + '<div id="editor-container"></div>\n'
+    + '<script type="module">\n'
+    + '  import {\n'
+    + '    MakeCodeFrameDriver,\n'
+    + '    createMakeCodeURL,\n'
+    + '    emptyMakeCodeProject,\n'
+    + '  } from "https://cdn.jsdelivr.net/npm/@microbit/makecode-embed@0.7.4/dist/esm/vanilla/index.js";\n'
+    + '\n'
+    + '  var statusEl = document.getElementById(\'status-carregamento\');\n'
+    + '\n'
+    + '  // motor tecnico, sem alteracao em relacao ao que ja foi validado.\n'
+    + '  function iniciarEditorMicrobit(containerEl, caminhoDaAula, tituloDaAula) {\n'
+    + '    var iframe = document.createElement(\'iframe\');\n'
+    + '    iframe.allow = \'usb; autoplay; camera; microphone;\';\n'
+    + '    containerEl.appendChild(iframe);\n'
+    + '    iframe.src = createMakeCodeURL(\'https://makecode.microbit.org\', undefined, undefined, 1, undefined);\n'
+    + '\n'
+    + '    var iniciado = false;\n'
+    + '    var driver = new MakeCodeFrameDriver(\n'
+    + '      {\n'
+    + '        controllerId: \'aula-microbit\',\n'
+    + '        initialProjects: async function () { return [emptyMakeCodeProject]; },\n'
+    + '        onWorkspaceLoaded: function () {\n'
+    + '          if (iniciado) return;\n'
+    + '          iniciado = true;\n'
+    + '          driver.startActivity({\n'
+    + '            activityType: \'tutorial\',\n'
+    + '            path: caminhoDaAula,\n'
+    + '            title: tituloDaAula,\n'
+    + '          }).then(function(){ statusEl.textContent = \'\'; })\n'
+    + '            .catch(function(e){ statusEl.textContent = \'erro ao abrir a aula: \' + e; });\n'
+    + '        },\n'
+    + '        onWorkspaceSave: function () {},\n'
+    + '      },\n'
+    + '      function () { return iframe; }\n'
+    + '    );\n'
+    + '    driver.initialize();\n'
+    + '  }\n'
+    + '\n'
+    + '  iniciarEditorMicrobit(document.getElementById(\'editor-container\'), '+caminhoJs+', '+tituloJs+');\n'
+    + '</' + 'script>\n'
+    + '</body>\n'
+    + '</html>\n';
+}
+
+function urlDaPagina(nomeArquivoHtml){
+  return 'https://'+CONFIG.owner+'.github.io/'+CONFIG.repo+'/'+nomeArquivoHtml;
+}
+
 async function salvarNoGithub(){
   if(!CONFIG.token){ mostrarMensagem('erro','Cola o token de acesso lá em cima antes de salvar.'); return; }
   if(!state.aulaNome.trim()){ mostrarMensagem('erro','Falta o nome da aula.'); return; }
@@ -698,6 +787,8 @@ async function salvarNoGithub(){
   if(!state.passos.length){ mostrarMensagem('erro','Adiciona pelo menos um passo antes de salvar.'); return; }
 
   var nomeArquivo = state.arquivoNome+'.md';
+  var nomeArquivoHtml = state.arquivoNome+'.html';
+  var caminho = 'github:'+CONFIG.owner+'/'+CONFIG.repo+'/'+state.arquivoNome;
   mostrarMensagem('info','Salvando...');
 
   try{
@@ -720,13 +811,13 @@ async function salvarNoGithub(){
       if(!putPxt.ok){ var e1 = await putPxt.json().catch(function(){return {};}); throw new Error('Não consegui atualizar o pxt.json: '+(e1.message||putPxt.status)); }
     }
 
-    // 2) verifica se o arquivo da aula já existe (pra saber se é criação ou atualização)
+    // 2) verifica se o arquivo .md da aula já existe (pra saber se é criação ou atualização, e confirmar sobrescrita)
     var respArq = await apiGithub('contents/'+nomeArquivo);
     var shaExistente = null;
     if(respArq.status===200){
       var infoArq = await respArq.json();
       shaExistente = infoArq.sha;
-      if(!confirm('Já existe um arquivo "'+nomeArquivo+'" nesse repositório. Quer sobrescrever com essa versão nova?')){
+      if(!confirm('Já existe uma aula "'+nomeArquivo+'" nesse repositório. Quer sobrescrever (o conteúdo e a página HTML) com essa versão nova?')){
         mostrarMensagem('info','Salvamento cancelado. Nada foi alterado.');
         return;
       }
@@ -734,7 +825,7 @@ async function salvarNoGithub(){
       throw new Error('Não consegui checar se o arquivo já existe (código '+respArq.status+').');
     }
 
-    // 3) grava o arquivo da aula
+    // 3) grava o arquivo .md da aula (conteúdo/blocos usados pelo tutorial do MakeCode)
     var corpo = {
       message: (shaExistente? 'Atualiza aula: ' : 'Cria aula: ')+state.aulaNome,
       content: utf8ToBase64(gerarMarkdown())
@@ -743,8 +834,30 @@ async function salvarNoGithub(){
     var putArq = await apiGithub('contents/'+nomeArquivo, {method:'PUT', body: JSON.stringify(corpo)});
     if(!putArq.ok){ var e2 = await putArq.json().catch(function(){return {};}); throw new Error('Não consegui salvar o arquivo da aula: '+(e2.message||putArq.status)); }
 
-    var caminho = 'github:'+CONFIG.owner+'/'+CONFIG.repo+'/'+state.arquivoNome;
-    mostrarMensagem('ok', 'Aula salva! Caminho pra usar na função iniciarEditorMicrobit: <code>'+caminho+'</code>');
+    // 4) gera e grava a página HTML pronta (o "embedado"), pra já sair usável
+    mostrarMensagem('info','Aula salva, gerando a página pronta...');
+    var respHtml = await apiGithub('contents/'+nomeArquivoHtml);
+    var shaHtmlExistente = null;
+    if(respHtml.status===200){
+      var infoHtml = await respHtml.json();
+      shaHtmlExistente = infoHtml.sha;
+    } else if(respHtml.status!==404){
+      throw new Error('Não consegui checar a página HTML existente (código '+respHtml.status+').');
+    }
+    var corpoHtml = {
+      message: (shaHtmlExistente? 'Atualiza página: ' : 'Cria página: ')+state.aulaNome,
+      content: utf8ToBase64(gerarPaginaAulaHtml(caminho, state.aulaNome))
+    };
+    if(shaHtmlExistente) corpoHtml.sha = shaHtmlExistente;
+    var putHtml = await apiGithub('contents/'+nomeArquivoHtml, {method:'PUT', body: JSON.stringify(corpoHtml)});
+    if(!putHtml.ok){ var e3 = await putHtml.json().catch(function(){return {};}); throw new Error('Salvei o conteúdo da aula, mas não consegui gerar a página HTML: '+(e3.message||putHtml.status)); }
+
+    var urlPagina = urlDaPagina(nomeArquivoHtml);
+    mostrarMensagem('ok',
+      'Aula salva! Página pronta pra abrir (pode levar uns segundos pra ficar no ar):<br>'
+      + '<a href="'+urlPagina+'" target="_blank">'+urlPagina+'</a><br><br>'
+      + 'Caminho técnico (pra usar em outro lugar, se precisar): <code>'+caminho+'</code>'
+    );
   } catch(err){
     mostrarMensagem('erro', 'Deu erro: '+err.message);
   }
@@ -775,4 +888,3 @@ render();
 </script>
 </body>
 </html>
-
