@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ver aula de micro:bit</title>
+<style>
+  *{box-sizing:border-box;}
+  html, body{
+    height:100%;
+    margin:0;
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background:#f4f6f8;
+    color:#3c4043;
+  }
+  #barra{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 16px;
+    background:#fff;
+    border-bottom:1px solid #d7dce1;
+  }
+  #barra h1{font-size:15px;margin:0;font-weight:600;}
+  #barra .status{font-size:12px;color:#5f6368;}
+  #barra button{
+    border:none;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;
+    background:#eef2f6;color:#3c4043;cursor:pointer;
+  }
+  #barra button:hover{background:#e2e7ec;}
+
+  #tela-inicial{
+    max-width:480px;margin:40px auto;background:#fff;border:1px solid #d7dce1;
+    border-radius:10px;padding:20px 24px;
+  }
+  #tela-inicial h2{font-size:16px;margin:0 0 4px 0;}
+  #tela-inicial p{font-size:13px;color:#5f6368;margin-top:0;}
+  #tela-inicial label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px 0;}
+  #tela-inicial input{
+    width:100%;padding:8px 10px;border:1px solid #d7dce1;border-radius:6px;font-size:14px;
+  }
+  #tela-inicial button{
+    margin-top:16px;width:100%;padding:10px;border:none;border-radius:6px;
+    background:#1a73e8;color:#fff;font-size:14px;font-weight:600;cursor:pointer;
+  }
+  #tela-inicial button:hover{background:#0b3d91;}
+  #tela-inicial .erro{color:#c5221f;font-size:12px;margin-top:8px;}
+  #tela-inicial .ajuda{font-size:11px;color:#80868b;margin-top:4px;}
+
+  #editor-wrap{
+    display:none;
+    height:calc(100% - 45px);
+    width:100%;
+  }
+  #editor-container{
+    width:100%;
+    height:100%;
+  }
+  #editor-container iframe{
+    width:100%;
+    height:100%;
+    border:none;
+    display:block;
+  }
+  #link-alternativo{font-size:12px;color:#5f6368;}
+  #link-alternativo a{color:#1a73e8;}
+</style>
+</head>
+<body>
+
+<div id="barra">
+  <h1 id="titulo-aula">Ver aula de micro:bit</h1>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="status" id="status-carregamento"></span>
+    <span id="link-alternativo" style="display:none;"></span>
+    <button onclick="trocarAula()">Trocar aula</button>
+  </div>
+</div>
+
+<div id="tela-inicial">
+  <h2>Qual aula abrir?</h2>
+  <p>Cola aqui o caminho que a ferramenta de autoria te deu depois de salvar (o que começa com <code>github:</code>).</p>
+  <label>Caminho da aula</label>
+  <input type="text" id="campo-caminho" placeholder="github:jonatanalan1/microbit-tutorial-piloto/nome-do-arquivo">
+  <label>Título da aula (só pra mostrar aqui em cima)</label>
+  <input type="text" id="campo-titulo" placeholder="Ex: Shake Shake">
+  <button onclick="abrirAulaDoFormulario()">Abrir aula</button>
+  <div class="erro" id="erro-form" style="display:none;"></div>
+  <p class="ajuda">Dica: também dá pra abrir direto por link, tipo <code>?caminho=github:...&titulo=Nome</code> no final do endereço dessa página.</p>
+</div>
+
+<div id="editor-wrap">
+  <div id="editor-container"></div>
+</div>
+
+<script type="module">
+  import {
+    MakeCodeFrameDriver,
+    createMakeCodeURL,
+    emptyMakeCodeProject,
+  } from "https://cdn.jsdelivr.net/npm/@microbit/makecode-embed@0.7.4/dist/esm/vanilla/index.js";
+
+  var statusEl = document.getElementById('status-carregamento');
+
+  // motor tecnico, sem alteracao em relacao ao que ja foi validado.
+  // So chamar isso depois que o elemento que vai guardar o iframe
+  // ja estiver visivelmente na tela (display diferente de none).
+  function iniciarEditorMicrobit(containerEl, caminhoDaAula, tituloDaAula) {
+    var iframe = document.createElement('iframe');
+    iframe.allow = 'usb; autoplay; camera; microphone;';
+    containerEl.appendChild(iframe);
+    iframe.src = createMakeCodeURL('https://makecode.microbit.org', undefined, undefined, 1, undefined);
+
+    var iniciado = false;
+    statusEl.textContent = 'carregando o editor...';
+    var driver = new MakeCodeFrameDriver(
+      {
+        controllerId: 'aula-microbit',
+        initialProjects: async function () { return [emptyMakeCodeProject]; },
+        onWorkspaceLoaded: function () {
+          if (iniciado) return;
+          iniciado = true;
+          statusEl.textContent = 'abrindo a aula...';
+          driver.startActivity({
+            activityType: 'tutorial',
+            path: caminhoDaAula, // ex: 'github:jonatanalan1/microbit-tutorial-piloto/piloto'
+            title: tituloDaAula,
+          }).then(function(){ statusEl.textContent = ''; })
+            .catch(function(e){ statusEl.textContent = 'erro ao abrir a aula: ' + e; });
+        },
+        onWorkspaceSave: function () {},
+      },
+      function () { return iframe; }
+    );
+    driver.initialize();
+  }
+
+  window.abrirAula = function(caminho, titulo){
+    caminho = (caminho||'').trim();
+    titulo = (titulo||'').trim() || 'Aula de micro:bit';
+    var erroEl = document.getElementById('erro-form');
+    if(!caminho){
+      erroEl.textContent = 'Cola o caminho da aula antes de abrir.';
+      erroEl.style.display = 'block';
+      return;
+    }
+    if(caminho.indexOf('github:') !== 0){
+      erroEl.textContent = 'O caminho precisa começar com "github:" (é o que a ferramenta de autoria te deu ao salvar).';
+      erroEl.style.display = 'block';
+      return;
+    }
+    document.getElementById('titulo-aula').textContent = titulo;
+    document.getElementById('tela-inicial').style.display = 'none';
+    // primeiro deixa o container visivel, so depois cria o editor nele (regra de ouro)
+    document.getElementById('editor-wrap').style.display = 'block';
+
+    var linkAlt = document.getElementById('link-alternativo');
+    linkAlt.innerHTML = '<a href="https://makecode.microbit.org/#tutorial:'+encodeURIComponent(caminho).replace(/%3A/g,':').replace(/%2F/g,'/')+'" target="_blank">abrir em outra aba, se não carregar aqui</a>';
+    linkAlt.style.display = 'inline';
+
+    iniciarEditorMicrobit(document.getElementById('editor-container'), caminho, titulo);
+  };
+
+  window.abrirAulaDoFormulario = function(){
+    var caminho = document.getElementById('campo-caminho').value;
+    var titulo = document.getElementById('campo-titulo').value;
+    window.abrirAula(caminho, titulo);
+  };
+
+  window.trocarAula = function(){
+    document.getElementById('editor-wrap').style.display = 'none';
+    document.getElementById('editor-container').innerHTML = '';
+    document.getElementById('tela-inicial').style.display = 'block';
+    document.getElementById('titulo-aula').textContent = 'Ver aula de micro:bit';
+    document.getElementById('link-alternativo').style.display = 'none';
+    statusEl.textContent = '';
+    var erroEl = document.getElementById('erro-form');
+    erroEl.style.display = 'none';
+  };
+
+  // abre direto se a URL ja vier com ?caminho=...&titulo=...
+  var params = new URLSearchParams(window.location.search);
+  var caminhoUrl = params.get('caminho');
+  if(caminhoUrl){
+    document.getElementById('campo-caminho').value = caminhoUrl;
+    document.getElementById('campo-titulo').value = params.get('titulo') || '';
+    window.abrirAula(caminhoUrl, params.get('titulo'));
+  }
+</script>
+</body>
+</html>
+
