@@ -140,18 +140,31 @@
     text-transform:uppercase;
     color:var(--accent-2);
   }
-  .editor-topline{
+  .editor-topline-mini{
     display:flex;
-    align-items:baseline;
-    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
     flex-wrap:wrap;
     flex-shrink:0;
   }
-  .editor-topline h2{
+  .editor-topline-mini .titulo-aula{
     font-family:'Baloo 2', 'Nunito Sans', sans-serif;
     font-weight:700;
-    font-size:1.15rem;
-    margin:0;
+    font-size:1rem;
+    color:var(--text);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .editor-topline-mini .botoes{
+    display:flex;
+    gap:8px;
+    flex-shrink:0;
+  }
+  .editor-topline-mini .cta{
+    padding:8px 16px;
+    font-size:.85rem;
   }
   h1{
     font-family:'Baloo 2', 'Nunito Sans', sans-serif;
@@ -193,33 +206,26 @@
   }
   .editor-frame{
     background:var(--surface);
-    border-radius:20px;
+    border-radius:14px;
     box-shadow: var(--shadow);
-    padding:14px;
+    padding:6px;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:18px;
     width:100%;
     flex:1;
     min-height:0;
     margin: 0 auto;
     position:relative;
   }
-  @media (orientation: landscape){
-    .editor-frame{
-      width:90%;
-      max-width:1400px;
-    }
-  }
   .editor-frame iframe{
     position:absolute;
-    inset:14px;
-    width:calc(100% - 28px);
-    height:calc(100% - 28px);
+    inset:6px;
+    width:calc(100% - 12px);
+    height:calc(100% - 12px);
     border:none;
-    border-radius:14px;
+    border-radius:10px;
     background:var(--surface-2);
     opacity:0;
     transition:opacity .3s ease;
@@ -227,13 +233,13 @@
   .editor-frame iframe.ready{
     opacity:1;
   }
-  .fallback-link{
-    align-self:center;
-    font-size:.85rem;
+  .fallback-link-mini{
+    text-align:center;
+    font-size:.72rem;
     color:var(--text-muted);
     flex-shrink:0;
   }
-  .fallback-link a{ color:var(--accent-2); font-weight:600; }
+  .fallback-link-mini a{ color:var(--accent-2); font-weight:600; }
   .editor-status{
     color:var(--text-muted);
     font-family:'Nunito Sans', sans-serif;
@@ -299,7 +305,7 @@
 <div class="app">
   <div class="topbar">
     <div class="brand">
-      <span class="brand-badge">XXXX</span>
+      <span class="brand-badge">🌟</span>
       Shake-shake4
     </div>
     <div class="dots" id="dots">
@@ -315,7 +321,7 @@
       <div class="eyebrow">Desafio</div>
       <h1>essa eh uma nova aula</h1>
       <div class="hero-card">
-        <div class="hero-emoji">XXXX</div>
+        <div class="hero-emoji">🌟</div>
         <p class="lead">Vocês irão testar o micro:bit</p>
       </div>
       <div class="controls">
@@ -324,19 +330,18 @@
     </section>
 
     <section class="slide editor-slide" data-slide="1" hidden>
-      <div class="editor-topline">
-        <span class="eyebrow">Mão na massa</span>
-        <h2>Monte o código aqui embaixo</h2>
+      <div class="editor-topline-mini">
+        <span class="titulo-aula">Shake-shake4</span>
+        <div class="botoes">
+          <button class="cta ghost" id="btn-back-1">← Voltar</button>
+          <button class="cta" id="btn-next-1">Consegui! <span aria-hidden="true">→</span></button>
+        </div>
       </div>
       <div class="editor-frame" id="editor-frame">
         <div id="editor-status" class="editor-status">Carregando o editor...</div>
       </div>
-      <div class="fallback-link">
-        Não carregou? <a href="https://makecode.microbit.org/#tutorial:github:jonatanalan1/microbit-tutorial-piloto/teste/shake-shake4" target="_blank" rel="noopener">abra o editor numa aba nova</a>.
-      </div>
-      <div class="controls">
-        <button class="cta ghost" id="btn-back-1">← Voltar</button>
-        <button class="cta" id="btn-next-1">Consegui! <span aria-hidden="true">→</span></button>
+      <div class="fallback-link-mini">
+        Não carregou? <a href="https://makecode.microbit.org/#tutorial:github:jonatanalan1/microbit-tutorial-piloto/teste/shake-shake4" target="_blank" rel="noopener">abrir numa aba nova</a>
       </div>
     </section>
 
