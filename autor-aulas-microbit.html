@@ -378,7 +378,6 @@ function renderPassoCodigo(passo){
 function gerarMarkdown(){
   var titulo = state.aulaNome || '(nome da aula)';
   var partes = ['# '+titulo];
-  var partes = ['# '+titulo];
   state.passos.forEach(function(passo, i){
     var codigo = renderPassoCodigo(passo);
     var bloco = '## {Step '+(i+1)+'}\n\n'+(passo.texto||'').trim();
@@ -849,7 +848,6 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '    transform:scale(1.25);\n'
     + '  }\n'
     + '\n'
-    + '  .stage{\n'
     + '  .stage{\n'
     + '    flex:1;\n'
     + '    min-height:0;\n'
