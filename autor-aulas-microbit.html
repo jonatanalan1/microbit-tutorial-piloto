@@ -114,8 +114,13 @@
 </head>
 <body>
 <div class="container">
-  <h1>Criar aula de micro:bit</h1>
-  <p class="subtitulo">Monte os passos e os blocos da aula. Ao salvar, isso gera o arquivo da aula e atualiza a lista de arquivos direto no GitHub.</p>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div>
+      <h1>Criar aula de micro:bit</h1>
+      <p class="subtitulo">Monte os passos e os blocos da aula. Ao salvar, isso gera o arquivo da aula e atualiza a lista de arquivos direto no GitHub.</p>
+    </div>
+    <button class="btn-secundario" onclick="novaAula()">+ Nova aula</button>
+  </div>
 
   <div class="card" id="card-token">
     <h2>Acesso ao GitHub <span id="selo-token" class="selo-token sem">sem token salvo</span></h2>
@@ -149,7 +154,17 @@
   </div>
 
   <div class="card">
+    <h2>Aulas já salvas</h2>
+    <p class="ajuda">Clique numa aula pra carregar ela de volta no formulário e editar. Só funciona pra aulas salvas depois dessa atualização (as mais antigas não têm o arquivo de estado ainda).</p>
+    <button class="btn-secundario btn-mini" onclick="carregarListaAulas()">Atualizar lista</button>
+    <div id="lista-aulas-existentes" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="card">
     <h2>Dados da aula</h2>
+    <label>Pasta / projeto (opcional, ex: projeto-x)</label>
+    <input type="text" id="campo-pasta" placeholder="Ex: projeto-x" oninput="onPastaChange()">
+    <p class="ajuda">Deixa em branco pra salvar solta, sem pasta. Aulas na mesma pasta ficam agrupadas na lista acima.</p>
     <div class="linha">
       <div>
         <label>Nome da aula</label>
@@ -336,7 +351,7 @@ function visualPadrao(){
   return {emojiAula:'', desafioTitulo:'', desafioTexto:'', emojiComemoracao:'', comemoracaoTitulo:'', comemoracaoTexto:''};
 }
 var state = {
-  aulaNome:'', arquivoNome:'',
+  pasta:'', aulaNome:'', arquivoNome:'',
   visual: visualPadrao(),
   passos:[] // {id, texto, blocos:[{id, catalogId, dentroDe, values}]}
 };
@@ -345,6 +360,35 @@ function novoId(prefixo){ return prefixo+(uid++); }
 function onVisualChange(campo, valor){
   state.visual[campo] = valor;
   salvarRascunho();
+}
+function onPastaChange(){
+  state.pasta = slug(document.getElementById('campo-pasta').value);
+  salvarRascunho();
+  render();
+}
+function preencherFormularioComEstado(){
+  document.getElementById('campo-pasta').value = state.pasta || '';
+  document.getElementById('campo-aula-nome').value = state.aulaNome;
+  document.getElementById('campo-arquivo-nome').value = state.arquivoNome;
+  document.getElementById('campo-emoji-aula').value = state.visual.emojiAula;
+  document.getElementById('campo-desafio-titulo').value = state.visual.desafioTitulo;
+  document.getElementById('campo-desafio-texto').value = state.visual.desafioTexto;
+  document.getElementById('campo-emoji-comemoracao').value = state.visual.emojiComemoracao;
+  document.getElementById('campo-comemoracao-titulo').value = state.visual.comemoracaoTitulo;
+  document.getElementById('campo-comemoracao-texto').value = state.visual.comemoracaoTexto;
+}
+function novaAula(){
+  if(state.aulaNome || state.passos.length){
+    if(!confirm('Começar uma aula nova? Isso limpa o formulário (a pasta atual continua preenchida).')) return;
+  }
+  var pastaAtual = state.pasta;
+  state = {pasta:pastaAtual, aulaNome:'', arquivoNome:'', visual:visualPadrao(), passos:[]};
+  arquivoNomeEditadoManual = false;
+  adicionarPasso();
+  preencherFormularioComEstado();
+  salvarRascunho();
+  render();
+  mostrarMensagem('info','Formulário limpo. Pode criar a aula nova.');
 }
 
 // controla qual passo tem o formulário de "adicionar bloco" aberto, e se está editando
@@ -359,6 +403,7 @@ function carregarRascunho(){
     if(r){ var obj = JSON.parse(r); if(obj && obj.passos) state = obj; }
   }catch(e){}
   if(!state.visual) state.visual = visualPadrao();
+  if(state.pasta==null) state.pasta = '';
 }
 
 /* ==================== GERAÇÃO DO MARKDOWN ==================== */
@@ -566,7 +611,8 @@ function render(){
   document.getElementById('preview-markdown').textContent = gerarMarkdown();
   var owner = document.getElementById('campo-owner').value || CONFIG.owner;
   var repo = document.getElementById('campo-repo').value || CONFIG.repo;
-  document.getElementById('preview-caminho').textContent = 'github:'+owner+'/'+repo+'/'+(state.arquivoNome||'nome-do-arquivo');
+  var prefixoPreview = state.pasta ? slug(state.pasta)+'/' : '';
+  document.getElementById('preview-caminho').textContent = 'github:'+owner+'/'+repo+'/'+prefixoPreview+(state.arquivoNome||'nome-do-arquivo');
 }
 
 function renderListaPassos(){
@@ -717,6 +763,83 @@ function apiGithub(path, opcoes){
     'Accept': 'application/vnd.github+json'
   }, opcoes.headers||{});
   return fetch('https://api.github.com/repos/'+CONFIG.owner+'/'+CONFIG.repo+'/'+path, Object.assign({}, opcoes, {headers:headers}));
+}
+
+/* ==================== LISTA / EDITAR AULA EXISTENTE ==================== */
+async function carregarListaAulas(){
+  var el = document.getElementById('lista-aulas-existentes');
+  if(!el) return;
+  if(!CONFIG.token){ el.innerHTML = '<p class="ajuda">Cola o token de acesso lá em cima pra ver as aulas já salvas.</p>'; return; }
+  el.innerHTML = '<p class="ajuda">Carregando...</p>';
+  try{
+    var resp = await apiGithub('git/trees/main?recursive=1');
+    if(!resp.ok){ el.innerHTML = '<p class="ajuda">Não consegui listar (código '+resp.status+').</p>'; return; }
+    var data = await resp.json();
+    var grupos = {};
+    (data.tree||[]).forEach(function(item){
+      if(item.type!=='blob') return;
+      if(!/\.md$/.test(item.path)) return;
+      var partes = item.path.split('/');
+      var arquivo = partes.pop().replace(/\.md$/,'');
+      var pasta = partes.join('/');
+      if(!grupos[pasta]) grupos[pasta] = [];
+      grupos[pasta].push(arquivo);
+    });
+    var pastas = Object.keys(grupos).sort();
+    if(!pastas.length){ el.innerHTML = '<p class="ajuda">Nenhuma aula salva ainda.</p>'; return; }
+    var html = '';
+    pastas.forEach(function(p){
+      html += '<div style="margin-top:10px;"><strong>'+escapeHtml(p||'(sem pasta)')+'</strong><div class="chips" style="margin-top:6px;">';
+      grupos[p].forEach(function(a){
+        html += '<span class="chip" onclick=\'abrirAulaExistente('+JSON.stringify(p)+','+JSON.stringify(a)+')\'>'+escapeHtml(a)+'</span>';
+      });
+      html += '</div></div>';
+    });
+    el.innerHTML = html;
+  }catch(e){
+    el.innerHTML = '<p class="ajuda">Não consegui listar as aulas agora.</p>';
+  }
+}
+async function abrirAulaExistente(pasta, arquivoNome){
+  if(!CONFIG.token){ mostrarMensagem('erro','Cola o token de acesso lá em cima antes.'); return; }
+  var prefixo = pasta ? pasta+'/' : '';
+  mostrarMensagem('info','Carregando aula...');
+  try{
+    var resp = await apiGithub('contents/'+prefixo+arquivoNome+'.estado.json');
+    if(resp.status===404){
+      mostrarMensagem('erro','Essa aula ("'+arquivoNome+'") foi criada antes dessa função de editar existir, não dá pra carregar ela de volta pro formulário. Se precisar mudar ela, dá pra recriar do zero com o mesmo nome (vai sobrescrever o conteúdo).');
+      return;
+    }
+    if(!resp.ok){ throw new Error('código '+resp.status); }
+    var info = await resp.json();
+    var texto = decodeURIComponent(escape(atob(info.content.replace(/\n/g,''))));
+    var novoEstado = JSON.parse(texto);
+    if(!novoEstado.visual) novoEstado.visual = visualPadrao();
+    if(!novoEstado.passos) novoEstado.passos = [];
+    novoEstado.pasta = pasta;
+    novoEstado.arquivoNome = arquivoNome;
+    state = novoEstado;
+    arquivoNomeEditadoManual = true;
+    preencherFormularioComEstado();
+    salvarRascunho();
+    render();
+    mostrarMensagem('ok','Editando a aula "'+state.aulaNome+'". Faça as mudanças e clique em Salvar de novo.');
+    window.scrollTo({top:0, behavior:'smooth'});
+  }catch(e){
+    mostrarMensagem('erro','Não consegui carregar essa aula: '+e.message);
+  }
+}
+function aguardar(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+async function esperarPaginaNoAr(url){
+  for(var i=0;i<20;i++){
+    try{
+      var r = await fetch(url, {method:'GET', cache:'no-store'});
+      if(r.ok) return true;
+    }catch(e){}
+    mostrarMensagem('info','Aula salva! Esperando a página ficar no ar... ('+(i+1)+'/20)');
+    await aguardar(2000);
+  }
+  return false;
 }
 
 // Gera a pagina HTML pronta da aula, no estilo com slides (abertura,
@@ -1190,9 +1313,11 @@ async function salvarNoGithub(){
   if(!state.arquivoNome.trim()){ mostrarMensagem('erro','Falta o nome do arquivo.'); return; }
   if(!state.passos.length){ mostrarMensagem('erro','Adiciona pelo menos um passo antes de salvar.'); return; }
 
-  var nomeArquivo = state.arquivoNome+'.md';
-  var nomeArquivoHtml = state.arquivoNome+'.html';
-  var caminho = 'github:'+CONFIG.owner+'/'+CONFIG.repo+'/'+state.arquivoNome;
+  var prefixo = state.pasta ? slug(state.pasta)+'/' : '';
+  var nomeArquivo = prefixo+state.arquivoNome+'.md';
+  var nomeArquivoHtml = prefixo+state.arquivoNome+'.html';
+  var nomeArquivoEstado = prefixo+state.arquivoNome+'.estado.json';
+  var caminho = 'github:'+CONFIG.owner+'/'+CONFIG.repo+'/'+prefixo+state.arquivoNome;
   mostrarMensagem('info','Salvando...');
 
   try{
@@ -1256,12 +1381,38 @@ async function salvarNoGithub(){
     var putHtml = await apiGithub('contents/'+nomeArquivoHtml, {method:'PUT', body: JSON.stringify(corpoHtml)});
     if(!putHtml.ok){ var e3 = await putHtml.json().catch(function(){return {};}); throw new Error('Salvei o conteúdo da aula, mas não consegui gerar a página HTML: '+(e3.message||putHtml.status)); }
 
+    // 5) grava o estado bruto do formulário (passos, blocos, textos), pra dar pra
+    // carregar de volta e editar essa aula depois. Se essa parte falhar, não desfaz
+    // o resto: a aula e a página já foram salvas, só não vai dar pra editar por aqui.
+    try{
+      var respEstado = await apiGithub('contents/'+nomeArquivoEstado);
+      var shaEstadoExistente = respEstado.status===200 ? (await respEstado.json()).sha : null;
+      var corpoEstado = {
+        message: (shaEstadoExistente? 'Atualiza estado: ' : 'Salva estado: ')+state.aulaNome,
+        content: utf8ToBase64(JSON.stringify(state))
+      };
+      if(shaEstadoExistente) corpoEstado.sha = shaEstadoExistente;
+      await apiGithub('contents/'+nomeArquivoEstado, {method:'PUT', body: JSON.stringify(corpoEstado)});
+    }catch(eEstado){ /* não trava o salvamento principal */ }
+
+    // 6) espera a página realmente ficar no ar antes de dar o link, pra não dar 404
     var urlPagina = urlDaPagina(nomeArquivoHtml);
-    mostrarMensagem('ok',
-      'Aula salva! Página pronta pra abrir (pode levar uns segundos pra ficar no ar):<br>'
-      + '<a href="'+urlPagina+'" target="_blank">'+urlPagina+'</a><br><br>'
-      + 'Caminho técnico (pra usar em outro lugar, se precisar): <code>'+caminho+'</code>'
-    );
+    mostrarMensagem('info','Aula salva! Esperando a página ficar no ar...');
+    var noAr = await esperarPaginaNoAr(urlPagina);
+    if(noAr){
+      mostrarMensagem('ok',
+        'Aula salva e já no ar. Pode abrir:<br>'
+        + '<a href="'+urlPagina+'" target="_blank">'+urlPagina+'</a><br><br>'
+        + 'Caminho técnico (pra usar em outro lugar, se precisar): <code>'+caminho+'</code>'
+      );
+    } else {
+      mostrarMensagem('ok',
+        'Aula salva! O GitHub Pages tá demorando mais que o normal pra publicar dessa vez. Espera mais um pouco e tenta esse link:<br>'
+        + '<a href="'+urlPagina+'" target="_blank">'+urlPagina+'</a><br><br>'
+        + 'Caminho técnico: <code>'+caminho+'</code>'
+      );
+    }
+    carregarListaAulas();
   } catch(err){
     mostrarMensagem('erro', 'Deu erro: '+err.message);
   }
@@ -1285,16 +1436,10 @@ function baixarMd(){
 carregarConfigGithub();
 carregarRascunho();
 if(state.aulaNome) arquivoNomeEditadoManual = true;
-document.getElementById('campo-aula-nome').value = state.aulaNome;
-document.getElementById('campo-arquivo-nome').value = state.arquivoNome;
-document.getElementById('campo-emoji-aula').value = state.visual.emojiAula;
-document.getElementById('campo-desafio-titulo').value = state.visual.desafioTitulo;
-document.getElementById('campo-desafio-texto').value = state.visual.desafioTexto;
-document.getElementById('campo-emoji-comemoracao').value = state.visual.emojiComemoracao;
-document.getElementById('campo-comemoracao-titulo').value = state.visual.comemoracaoTitulo;
-document.getElementById('campo-comemoracao-texto').value = state.visual.comemoracaoTexto;
+preencherFormularioComEstado();
 if(!state.passos.length) adicionarPasso();
 render();
+carregarListaAulas();
 </script>
 </body>
 </html>
