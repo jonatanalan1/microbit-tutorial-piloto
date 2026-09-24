@@ -110,16 +110,46 @@
   .selo-token.sem{background:#fdeceb;color:var(--vermelho);}
   details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--azul-escuro);}
   .rodape{text-align:center;font-size:12px;color:#80868b;margin-top:24px;}
+  .tela{display:none;}
+  .tela.ativa{display:block;}
+  .tela-inicio{text-align:center;padding:30px 10px;}
+  .botoes-inicio{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-top:24px;}
+  .botao-inicio{
+    background:var(--branco);border:1px solid var(--cinza-borda);border-radius:14px;
+    padding:28px 32px;min-width:220px;cursor:pointer;font-family:inherit;text-align:center;
+  }
+  .botao-inicio:hover{background:#eef2f6;}
+  .botao-inicio .emoji{font-size:36px;display:block;margin-bottom:10px;}
+  .botao-inicio .titulo{font-size:16px;font-weight:700;color:var(--cinza-texto);}
+  .botao-inicio .desc{font-size:12px;color:#5f6368;margin-top:4px;}
+  .topo-tela{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+  .topo-tela h2{margin:0;}
+  .grid-pastas{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+  .pasta-card{
+    background:var(--branco);border:1px solid var(--cinza-borda);border-radius:10px;
+    padding:16px;cursor:pointer;text-align:left;font-family:inherit;
+  }
+  .pasta-card:hover{background:#eef2f6;}
+  .aula-item{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    background:#fff;border:1px solid var(--cinza-borda);border-radius:6px;
+    padding:10px 12px;margin-top:8px;
+  }
+  .popup-emoji{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:50;display:none;align-items:center;justify-content:center;padding:16px;}
+  .popup-emoji.aberto{display:flex;}
+  .popup-emoji-inner{background:#fff;border-radius:10px;padding:16px;max-width:380px;max-height:70vh;overflow:auto;}
+  .grid-emoji{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:8px;}
+  .emoji-btn{background:#f4f6f8;border:1px solid var(--cinza-borda);border-radius:6px;font-size:20px;padding:4px;cursor:pointer;line-height:1.2;}
+  .emoji-btn:hover{background:#e2e7ec;}
+  .campo-com-botao{display:flex;gap:8px;align-items:center;}
+  .campo-com-botao input{flex:1;}
 </style>
 </head>
 <body>
 <div class="container">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-    <div>
-      <h1>Criar aula de micro:bit</h1>
-      <p class="subtitulo">Monte os passos e os blocos da aula. Ao salvar, isso gera o arquivo da aula e atualiza a lista de arquivos direto no GitHub.</p>
-    </div>
-    <button class="btn-secundario" onclick="novaAula()">+ Nova aula</button>
+  <div>
+    <h1>Criar aula de micro:bit</h1>
+    <p class="subtitulo">Ferramenta de autoria interna pra montar aulas de micro:bit.</p>
   </div>
 
   <div class="card" id="card-token">
@@ -153,71 +183,105 @@
     </details>
   </div>
 
-  <div class="card">
-    <h2>Aulas já salvas</h2>
-    <p class="ajuda">Clique numa aula pra carregar ela de volta no formulário e editar. Só funciona pra aulas salvas depois dessa atualização (as mais antigas não têm o arquivo de estado ainda).</p>
-    <button class="btn-secundario btn-mini" onclick="carregarListaAulas()">Atualizar lista</button>
-    <div id="lista-aulas-existentes" style="margin-top:8px;"></div>
-  </div>
-
-  <div class="card">
-    <h2>Dados da aula</h2>
-    <label>Pasta / projeto (opcional, ex: projeto-x)</label>
-    <input type="text" id="campo-pasta" placeholder="Ex: projeto-x" oninput="onPastaChange()">
-    <p class="ajuda">Deixa em branco pra salvar solta, sem pasta. Aulas na mesma pasta ficam agrupadas na lista acima.</p>
-    <div class="linha">
-      <div>
-        <label>Nome da aula</label>
-        <input type="text" id="campo-aula-nome" placeholder="Ex: Botão e Ícone" oninput="onAulaNomeChange()">
-      </div>
-      <div>
-        <label>Nome do arquivo (sem espaço, sem acento)</label>
-        <input type="text" id="campo-arquivo-nome" placeholder="Ex: botao-e-icone" oninput="onArquivoNomeChange(true)">
+  <div id="tela-inicio" class="tela ativa">
+    <div class="tela-inicio">
+      <p class="subtitulo">O que você quer fazer?</p>
+      <div class="botoes-inicio">
+        <button type="button" class="botao-inicio" onclick="irParaCriarAula()">
+          <span class="emoji">✨</span>
+          <span class="titulo">Criar aula</span>
+          <span class="desc">Começar uma aula nova, do zero</span>
+        </button>
+        <button type="button" class="botao-inicio" onclick="irParaAjustarAula()">
+          <span class="emoji">🗂️</span>
+          <span class="titulo">Ajustar aula</span>
+          <span class="desc">Editar ou excluir uma aula já salva</span>
+        </button>
       </div>
     </div>
-    <p class="ajuda">Caminho que vai ser usado na página da aula: <code id="preview-caminho">github:.../...</code></p>
   </div>
 
-  <div class="card">
-    <h2>Visual da aula (tela de abertura e tela final)</h2>
-    <p class="ajuda">Isso monta a tela de abertura (o desafio) e a tela final (a comemoração) da página pronta, no estilo do Missão Coração. A tela do meio, com o editor, é sempre igual.</p>
-    <label>Emoji/ícone da aula (aparece no topo e na abertura)</label>
-    <input type="text" id="campo-emoji-aula" placeholder="Ex: ❤️" oninput="onVisualChange('emojiAula', this.value)">
-    <label>Pergunta/desafio (título da tela de abertura)</label>
-    <input type="text" id="campo-desafio-titulo" placeholder="Ex: Como fazer um coração aparecer na tela do micro:bit?" oninput="onVisualChange('desafioTitulo', this.value)">
-    <label>Texto de apoio da abertura</label>
-    <textarea id="campo-desafio-texto" oninput="onVisualChange('desafioTexto', this.value)" placeholder="Ex: Você vai usar só dois blocos de programação pra descobrir a resposta. Toca na seta pra começar a missão."></textarea>
-    <label>Emoji de comemoração (aparece na tela final)</label>
-    <input type="text" id="campo-emoji-comemoracao" placeholder="Ex: 🎉❤️🎉" oninput="onVisualChange('emojiComemoracao', this.value)">
-    <label>Frase de comemoração (título da tela final)</label>
-    <input type="text" id="campo-comemoracao-titulo" placeholder="Ex: Que legal que você conseguiu!" oninput="onVisualChange('comemoracaoTitulo', this.value)">
-    <label>Texto de comemoração</label>
-    <textarea id="campo-comemoracao-texto" oninput="onVisualChange('comemoracaoTexto', this.value)" placeholder="Ex: Você programou o micro:bit pra mostrar um coração quando aperta o botão A. Bora tentar de novo ou mostrar pra alguém?"></textarea>
-  </div>
-
-  <div class="card">
-    <h2>Passos da aula</h2>
-    <div id="lista-passos"></div>
-    <button class="btn-secundario" onclick="adicionarPasso()">+ Adicionar passo</button>
-  </div>
-
-  <div class="card">
-    <h2>Pré-visualização do arquivo</h2>
-    <div class="preview" id="preview-markdown"></div>
-    <div class="acoes" style="margin-top:10px;">
-      <button class="btn-secundario btn-mini" onclick="copiarPreview()">Copiar conteúdo</button>
-      <button class="btn-secundario btn-mini" onclick="baixarMd()">Baixar .md</button>
+  <div id="tela-ajustar" class="tela">
+    <div class="topo-tela">
+      <button class="btn-secundario btn-mini" onclick="mostrarTela('inicio')">← Início</button>
+      <h2>Ajustar aula</h2>
     </div>
+    <div id="conteudo-ajustar"></div>
   </div>
 
-  <div class="card">
-    <h2>Salvar</h2>
-    <button class="btn-principal btn-grande" onclick="salvarNoGithub()">Salvar aula no GitHub</button>
-    <p class="ajuda">Isso salva o conteúdo da aula e já gera a página pronta pra abrir, com o editor MakeCode embutido.</p>
-    <div id="area-mensagem"></div>
+  <div id="tela-editor" class="tela">
+    <div class="topo-tela">
+      <button class="btn-secundario btn-mini" onclick="mostrarTela('inicio')">← Início</button>
+      <h2 id="titulo-tela-editor">Nova aula</h2>
+    </div>
+
+    <div class="card">
+      <h2>Dados da aula</h2>
+      <label>Pasta / projeto</label>
+      <select id="campo-pasta-select" onchange="onPastaSelectChange()"></select>
+      <input type="text" id="campo-pasta-nova" style="display:none;margin-top:8px;" placeholder="Nome da pasta nova" oninput="onPastaNovaChange()">
+      <p class="ajuda">Escolhe uma pasta já existente ou cria uma nova. Deixa em "(sem pasta)" pra salvar solta.</p>
+      <div class="linha">
+        <div>
+          <label>Nome da aula</label>
+          <input type="text" id="campo-aula-nome" placeholder="Ex: Botão e Ícone" oninput="onAulaNomeChange()">
+        </div>
+        <div>
+          <label>Nome do arquivo (sem espaço, sem acento)</label>
+          <input type="text" id="campo-arquivo-nome" placeholder="Ex: botao-e-icone" oninput="onArquivoNomeChange(true)">
+        </div>
+      </div>
+      <p class="ajuda">Caminho que vai ser usado na página da aula: <code id="preview-caminho">github:.../...</code></p>
+    </div>
+
+    <div class="card">
+      <h2>Visual da aula (tela de abertura e tela final)</h2>
+      <p class="ajuda">Isso monta a tela de abertura (o desafio) e a tela final (a comemoração) da página pronta, no estilo do Missão Coração. A tela do meio, com o editor, é sempre igual.</p>
+      <label>Emoji/ícone da aula (aparece no topo e na abertura)</label>
+      <div class="campo-com-botao">
+        <input type="text" id="campo-emoji-aula" placeholder="Ex: ❤️" oninput="onVisualChange('emojiAula', this.value)">
+        <button type="button" class="btn-secundario btn-mini" onclick="abrirSeletorEmoji('campo-emoji-aula','emojiAula')">😀 Escolher</button>
+      </div>
+      <label>Pergunta/desafio (título da tela de abertura)</label>
+      <input type="text" id="campo-desafio-titulo" placeholder="Ex: Como fazer um coração aparecer na tela do micro:bit?" oninput="onVisualChange('desafioTitulo', this.value)">
+      <label>Texto de apoio da abertura</label>
+      <textarea id="campo-desafio-texto" oninput="onVisualChange('desafioTexto', this.value)" placeholder="Ex: Você vai usar só dois blocos de programação pra descobrir a resposta. Toca na seta pra começar a missão."></textarea>
+      <label>Emoji de comemoração (aparece na tela final)</label>
+      <div class="campo-com-botao">
+        <input type="text" id="campo-emoji-comemoracao" placeholder="Ex: 🎉❤️🎉" oninput="onVisualChange('emojiComemoracao', this.value)">
+        <button type="button" class="btn-secundario btn-mini" onclick="abrirSeletorEmoji('campo-emoji-comemoracao','emojiComemoracao')">😀 Escolher</button>
+      </div>
+      <label>Frase de comemoração (título da tela final)</label>
+      <input type="text" id="campo-comemoracao-titulo" placeholder="Ex: Que legal que você conseguiu!" oninput="onVisualChange('comemoracaoTitulo', this.value)">
+      <label>Texto de comemoração</label>
+      <textarea id="campo-comemoracao-texto" oninput="onVisualChange('comemoracaoTexto', this.value)" placeholder="Ex: Você programou o micro:bit pra mostrar um coração quando aperta o botão A. Bora tentar de novo ou mostrar pra alguém?"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Passos da aula</h2>
+      <div id="lista-passos"></div>
+      <button class="btn-secundario" onclick="adicionarPasso()">+ Adicionar passo</button>
+    </div>
+
+    <div class="card">
+      <h2>Salvar</h2>
+      <button class="btn-principal btn-grande" onclick="salvarNoGithub()">Salvar aula no GitHub</button>
+      <p class="ajuda">Isso salva o conteúdo da aula e já gera a página pronta pra abrir, com o editor MakeCode embutido.</p>
+      <div id="area-mensagem"></div>
+    </div>
   </div>
 
   <p class="rodape">Ferramenta de autoria interna. Feita pra uso próprio, sem depender de mais ninguém pra criar aula nova.</p>
+</div>
+
+<div id="popup-emoji" class="popup-emoji">
+  <div class="popup-emoji-inner">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <strong style="font-size:13px;">Escolher emoji</strong>
+      <button type="button" class="btn-secundario btn-mini" onclick="fecharSeletorEmoji()">Fechar</button>
+    </div>
+    <div id="grid-emoji" class="grid-emoji"></div>
+  </div>
 </div>
 
 <script>
@@ -238,6 +302,12 @@ function indent(texto, n){
 }
 function escJs(s){
   return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+}
+function variavelJs(nome){
+  var limpo = (nome||'').toString().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9_]/g,'');
+  if(!limpo) limpo = 'variavel';
+  if(/^[0-9]/.test(limpo)) limpo = '_'+limpo;
+  return limpo;
 }
 
 var ICONES = [
@@ -339,7 +409,87 @@ var CATALOG = [
 
   {id:'radio_ao_receber_numero', categoria:'Rádio', label:'Quando receber um número pelo rádio', hint:'rádio:ao receber número', container:true,
     params:[],
-    render:function(v,c){ return 'radio.onReceivedNumber(function (receivedNumber) {\n'+indent(c,4)+'\n})'; }}
+    render:function(v,c){ return 'radio.onReceivedNumber(function (receivedNumber) {\n'+indent(c,4)+'\n})'; }},
+
+  {id:'radio_definir_grupo', categoria:'Rádio', label:'Definir o grupo do rádio (só fala com quem está no mesmo grupo)', hint:'rádio:definir grupo', container:false,
+    params:[{key:'grupo', label:'Número do grupo', type:'number', def:1}],
+    render:function(v){ return 'radio.setGroup('+v.grupo+')'; }},
+
+  {id:'radio_enviar_texto', categoria:'Rádio', label:'Enviar um texto pelo rádio', hint:'rádio:enviar texto', container:false,
+    params:[{key:'texto', label:'Qual texto', type:'text', def:'oi'}],
+    render:function(v){ return 'radio.sendString("'+escJs(v.texto)+'")'; }},
+
+  {id:'radio_ao_receber_texto', categoria:'Rádio', label:'Quando receber um texto pelo rádio', hint:'rádio:ao receber texto', container:true,
+    params:[],
+    render:function(v,c){ return 'radio.onReceivedString(function (receivedString) {\n'+indent(c,4)+'\n})'; }},
+
+  {id:'definir_bpm', categoria:'Música', label:'Definir a velocidade da música (batidas por minuto)', hint:'música:definir bpm', container:false,
+    params:[{key:'bpm', label:'Batidas por minuto', type:'number', def:120}],
+    render:function(v){ return 'music.setTempo('+v.bpm+')'; }},
+
+  {id:'tocar_frequencia', categoria:'Música', label:'Tocar um som numa frequência escolhida', hint:'música:tocar frequência', container:false,
+    params:[{key:'freq', label:'Frequência (Hz)', type:'number', def:440}, {key:'duracao', label:'Por quantos milissegundos', type:'number', def:500}],
+    render:function(v){ return 'music.playTone('+v.freq+', '+v.duracao+')'; }},
+
+  {id:'definir_brilho', categoria:'Tela de LEDs', label:'Definir o brilho da tela (0 a 255)', hint:'led:definir brilho', container:false,
+    params:[{key:'brilho', label:'Brilho (0 a 255)', type:'number', def:255}],
+    render:function(v){ return 'led.setBrightness('+v.brilho+')'; }},
+
+  {id:'escrever_analogico', categoria:'Pinos', label:'Definir a força de um sinal num pino (0 a 1023)', hint:'pinos:escrever analógico', container:false,
+    params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}, {key:'valor', label:'Valor (0 a 1023)', type:'number', def:512}],
+    render:function(v){ return 'pins.analogWritePin(AnalogPin.'+v.pino+', '+v.valor+')'; }},
+
+  {id:'se_botao_pressionado_agora', categoria:'Lógica', label:'Se o botão estiver pressionado agora, então', hint:'lógica:se botão pressionado', container:true,
+    params:[{key:'botao', label:'Qual botão', type:'select', options:[['A','Botão A'],['B','Botão B']]}],
+    render:function(v,c){ return 'if (input.buttonIsPressed(Button.'+v.botao+')) {\n'+indent(c,4)+'\n}'; }},
+
+  {id:'se_luz_comparar', categoria:'Lógica', label:'Se o nível de luz for maior/menor que um número, então', hint:'lógica:se luz', container:true,
+    params:[{key:'comparador', label:'Maior ou menor', type:'select', options:[['>','Maior que'],['<','Menor que']]}, {key:'valor', label:'Comparar com qual número (0 a 255)', type:'number', def:128}],
+    render:function(v,c){ return 'if (input.lightLevel() '+v.comparador+' '+v.valor+') {\n'+indent(c,4)+'\n}'; }},
+
+  {id:'se_temperatura_comparar', categoria:'Lógica', label:'Se a temperatura for maior/menor que um número, então', hint:'lógica:se temperatura', container:true,
+    params:[{key:'comparador', label:'Maior ou menor', type:'select', options:[['>','Maior que'],['<','Menor que']]}, {key:'valor', label:'Comparar com quantos graus', type:'number', def:25}],
+    render:function(v,c){ return 'if (input.temperature() '+v.comparador+' '+v.valor+') {\n'+indent(c,4)+'\n}'; }},
+
+  {id:'se_som_comparar', categoria:'Lógica', label:'Se o nível de som for maior/menor que um número, então', hint:'lógica:se som', container:true,
+    params:[{key:'comparador', label:'Maior ou menor', type:'select', options:[['>','Maior que'],['<','Menor que']]}, {key:'valor', label:'Comparar com qual número (0 a 255)', type:'number', def:128}],
+    render:function(v,c){ return 'if (input.soundLevel() '+v.comparador+' '+v.valor+') {\n'+indent(c,4)+'\n}'; }},
+
+  {id:'criar_variavel', categoria:'Variáveis', label:'Criar uma variável com um valor inicial', hint:'variável:criar', container:false,
+    params:[{key:'nome', label:'Nome da variável', type:'text', def:'pontos'}, {key:'valor', label:'Valor inicial', type:'number', def:0}],
+    render:function(v){ return 'let '+variavelJs(v.nome)+' = '+v.valor+';'; }},
+
+  {id:'mudar_variavel', categoria:'Variáveis', label:'Somar um número numa variável', hint:'variável:mudar', container:false,
+    params:[{key:'nome', label:'Nome da variável', type:'text', def:'pontos'}, {key:'quantidade', label:'Somar quanto (pode ser negativo)', type:'number', def:1}],
+    render:function(v){ return variavelJs(v.nome)+' += '+v.quantidade+';'; }},
+
+  {id:'definir_variavel', categoria:'Variáveis', label:'Definir o valor de uma variável', hint:'variável:definir', container:false,
+    params:[{key:'nome', label:'Nome da variável', type:'text', def:'pontos'}, {key:'valor', label:'Novo valor', type:'number', def:0}],
+    render:function(v){ return variavelJs(v.nome)+' = '+v.valor+';'; }},
+
+  {id:'mostrar_variavel', categoria:'Variáveis', label:'Mostrar o valor de uma variável na tela', hint:'variável:mostrar', container:false,
+    params:[{key:'nome', label:'Nome da variável', type:'text', def:'pontos'}],
+    render:function(v){ return 'basic.showNumber('+variavelJs(v.nome)+')'; }},
+
+  {id:'mostrar_temperatura', categoria:'Sensores', label:'Mostrar a temperatura na tela', hint:'sensores:temperatura', container:false,
+    params:[],
+    render:function(v){ return 'basic.showNumber(input.temperature())'; }},
+
+  {id:'mostrar_luz', categoria:'Sensores', label:'Mostrar o nível de luz na tela', hint:'sensores:luz', container:false,
+    params:[],
+    render:function(v){ return 'basic.showNumber(input.lightLevel())'; }},
+
+  {id:'mostrar_som', categoria:'Sensores', label:'Mostrar o nível de som na tela', hint:'sensores:som', container:false,
+    params:[],
+    render:function(v){ return 'basic.showNumber(input.soundLevel())'; }},
+
+  {id:'mostrar_aceleracao', categoria:'Sensores', label:'Mostrar a força do movimento (aceleração) num eixo', hint:'sensores:aceleração', container:false,
+    params:[{key:'eixo', label:'Qual eixo', type:'select', options:[['X','X (lados)'],['Y','Y (frente/trás)'],['Z','Z (cima/baixo)']]}],
+    render:function(v){ return 'basic.showNumber(input.acceleration(Dimension.'+v.eixo+'))'; }},
+
+  {id:'mover_servo', categoria:'Extensões', label:'Mover o Servo Motor pra um ângulo (extensão, em teste)', hint:'servo:mover motor', container:false, extensao:'servo',
+    params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}, {key:'angulo', label:'Ângulo (0 a 180)', type:'number', def:90}],
+    render:function(v){ return 'servos.'+v.pino+'.setAngle('+v.angulo+')'; }}
 ];
 var CATALOG_MAP = {};
 CATALOG.forEach(function(c){ CATALOG_MAP[c.id] = c; });
@@ -361,13 +511,7 @@ function onVisualChange(campo, valor){
   state.visual[campo] = valor;
   salvarRascunho();
 }
-function onPastaChange(){
-  state.pasta = slug(document.getElementById('campo-pasta').value);
-  salvarRascunho();
-  render();
-}
 function preencherFormularioComEstado(){
-  document.getElementById('campo-pasta').value = state.pasta || '';
   document.getElementById('campo-aula-nome').value = state.aulaNome;
   document.getElementById('campo-arquivo-nome').value = state.arquivoNome;
   document.getElementById('campo-emoji-aula').value = state.visual.emojiAula;
@@ -377,18 +521,93 @@ function preencherFormularioComEstado(){
   document.getElementById('campo-comemoracao-titulo').value = state.visual.comemoracaoTitulo;
   document.getElementById('campo-comemoracao-texto').value = state.visual.comemoracaoTexto;
 }
-function novaAula(){
-  if(state.aulaNome || state.passos.length){
-    if(!confirm('Começar uma aula nova? Isso limpa o formulário (a pasta atual continua preenchida).')) return;
+/* ==================== NAVEGAÇÃO ENTRE TELAS ==================== */
+function mostrarTela(nome){
+  ['inicio','ajustar','editor'].forEach(function(n){
+    var el = document.getElementById('tela-'+n);
+    if(el) el.classList.toggle('ativa', n===nome);
+  });
+  if(nome==='ajustar') carregarEstruturaEExibirPastas();
+}
+function aulaTemConteudo(){
+  return !!(state.aulaNome || state.passos.some(function(p){ return p.texto || p.blocos.length; }));
+}
+function irParaCriarAula(){
+  if(aulaTemConteudo()){
+    if(!confirm('Começar uma aula nova vai limpar o que estiver no formulário sem salvar. Continuar?')) return;
   }
-  var pastaAtual = state.pasta;
-  state = {pasta:pastaAtual, aulaNome:'', arquivoNome:'', visual:visualPadrao(), passos:[]};
+  state = {pasta:'', aulaNome:'', arquivoNome:'', visual:visualPadrao(), passos:[]};
   arquivoNomeEditadoManual = false;
   adicionarPasso();
+  salvarRascunho();
+  document.getElementById('titulo-tela-editor').textContent = 'Nova aula';
+  mostrarTela('editor');
+  popularSelectPasta();
   preencherFormularioComEstado();
+  render();
+}
+function irParaAjustarAula(){
+  mostrarTela('ajustar');
+}
+
+/* ==================== PASTA (select) ==================== */
+async function popularSelectPasta(){
+  var sel = document.getElementById('campo-pasta-select');
+  if(!sel) return;
+  var estrutura = {pastas:[]};
+  try{ estrutura = await carregarEstrutura(); }catch(e){}
+  var pastasSet = estrutura.pastas.slice();
+  if(state.pasta && pastasSet.indexOf(state.pasta)===-1) pastasSet.push(state.pasta);
+  pastasSet.sort();
+  var html = opt('', '(sem pasta)', state.pasta||'');
+  pastasSet.forEach(function(p){ html += opt(p, p, state.pasta||''); });
+  html += '<option value="__nova__">+ Criar pasta nova...</option>';
+  sel.innerHTML = html;
+  var campoNova = document.getElementById('campo-pasta-nova');
+  if(campoNova) campoNova.style.display = 'none';
+}
+function onPastaSelectChange(){
+  var sel = document.getElementById('campo-pasta-select');
+  var campoNova = document.getElementById('campo-pasta-nova');
+  if(sel.value === '__nova__'){
+    campoNova.style.display = 'block';
+    campoNova.value = '';
+    campoNova.focus();
+  } else {
+    campoNova.style.display = 'none';
+    state.pasta = sel.value;
+    salvarRascunho();
+    render();
+  }
+}
+function onPastaNovaChange(){
+  var campoNova = document.getElementById('campo-pasta-nova');
+  state.pasta = slug(campoNova.value);
   salvarRascunho();
   render();
-  mostrarMensagem('info','Formulário limpo. Pode criar a aula nova.');
+}
+
+/* ==================== SELETOR DE EMOJI ==================== */
+var EMOJIS = ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','💖','💕','😀','😃','😄','😁','😆','😅','🤣','😂','🙂','😉',
+  '😊','😇','🥰','😍','🤩','😎','🤔','🤗','😴','😢','😭','😱','😡','🤯','🥳','🎉','🎊','🎈','🌟','⭐',
+  '✨','🔥','💡','🚀','🤖','👾','⚡','🎯','🏆','✅','❌','👍','👏','🙌','🤝','👋','🐶','🐱','🐰','🦊',
+  '🐻','🐼','🐸','🐵','🦄','🐢','🐟','🦋','🌈','☀️','🌙','⚙️','🔧','🎮','📱','💻','🎵','🎶','🍎','🍕','🎂'];
+var seletorEmojiAlvo = null;
+function abrirSeletorEmoji(campoId, visualCampo){
+  seletorEmojiAlvo = {campoId:campoId, visualCampo:visualCampo};
+  var grid = document.getElementById('grid-emoji');
+  grid.innerHTML = EMOJIS.map(function(e){ return '<button type="button" class="emoji-btn" onclick="escolherEmoji(\''+e+'\')">'+e+'</button>'; }).join('');
+  document.getElementById('popup-emoji').classList.add('aberto');
+}
+function escolherEmoji(e){
+  if(!seletorEmojiAlvo) return;
+  document.getElementById(seletorEmojiAlvo.campoId).value = e;
+  onVisualChange(seletorEmojiAlvo.visualCampo, e);
+  fecharSeletorEmoji();
+}
+function fecharSeletorEmoji(){
+  document.getElementById('popup-emoji').classList.remove('aberto');
+  seletorEmojiAlvo = null;
 }
 
 // controla qual passo tem o formulário de "adicionar bloco" aberto, e se está editando
@@ -420,9 +639,25 @@ function renderPassoCodigo(passo){
   var topo = passo.blocos.filter(function(b){ return !b.dentroDe; });
   return topo.map(function(b){ return renderNode(b, passo.blocos); }).join('\n');
 }
+var EXTENSOES_PACOTE = {
+  servo: 'servo=github:microsoft/pxt-servo'
+};
+function aulaUsaExtensao(extensaoId){
+  return state.passos.some(function(p){
+    return p.blocos.some(function(b){
+      var entry = CATALOG_MAP[b.catalogId];
+      return entry && entry.extensao === extensaoId;
+    });
+  });
+}
 function gerarMarkdown(){
   var titulo = state.aulaNome || '(nome da aula)';
   var partes = ['# '+titulo];
+  Object.keys(EXTENSOES_PACOTE).forEach(function(ext){
+    if(aulaUsaExtensao(ext)){
+      partes.push('```package\n'+EXTENSOES_PACOTE[ext]+'\n```');
+    }
+  });
   state.passos.forEach(function(passo, i){
     var codigo = renderPassoCodigo(passo);
     var bloco = '## {Step '+(i+1)+'}\n\n'+(passo.texto||'').trim();
@@ -608,7 +843,6 @@ function resumoBloco(b){
 /* ==================== RENDER ==================== */
 function render(){
   renderListaPassos();
-  document.getElementById('preview-markdown').textContent = gerarMarkdown();
   var owner = document.getElementById('campo-owner').value || CONFIG.owner;
   var repo = document.getElementById('campo-repo').value || CONFIG.repo;
   var prefixoPreview = state.pasta ? slug(state.pasta)+'/' : '';
@@ -765,49 +999,90 @@ function apiGithub(path, opcoes){
   return fetch('https://api.github.com/repos/'+CONFIG.owner+'/'+CONFIG.repo+'/'+path, Object.assign({}, opcoes, {headers:headers}));
 }
 
-/* ==================== LISTA / EDITAR AULA EXISTENTE ==================== */
-async function carregarListaAulas(){
-  var el = document.getElementById('lista-aulas-existentes');
-  if(!el) return;
-  if(!CONFIG.token){ el.innerHTML = '<p class="ajuda">Cola o token de acesso lá em cima pra ver as aulas já salvas.</p>'; return; }
+/* ==================== ESTRUTURA DE PASTAS / AULAS NO REPOSITÓRIO ==================== */
+var ESTRUTURA_CACHE = null;
+async function carregarEstrutura(forcar){
+  if(ESTRUTURA_CACHE && !forcar) return ESTRUTURA_CACHE;
+  if(!CONFIG.token){ return {pastas:[], porPasta:{}}; }
+  var resp = await apiGithub('git/trees/main?recursive=1');
+  if(!resp.ok) throw new Error('código '+resp.status);
+  var data = await resp.json();
+  var porPasta = {};
+  (data.tree||[]).forEach(function(item){
+    if(item.type!=='blob') return;
+    if(!/\.md$/.test(item.path)) return;
+    var partes = item.path.split('/');
+    var arquivo = partes.pop().replace(/\.md$/,'');
+    var pasta = partes.join('/');
+    if(!porPasta[pasta]) porPasta[pasta] = [];
+    porPasta[pasta].push(arquivo);
+  });
+  var pastas = Object.keys(porPasta).filter(function(p){ return p; }).sort();
+  ESTRUTURA_CACHE = {pastas:pastas, porPasta:porPasta};
+  return ESTRUTURA_CACHE;
+}
+
+/* ==================== TELA AJUSTAR AULA ==================== */
+var pastaSelecionadaAjustar = null;
+async function carregarEstruturaEExibirPastas(){
+  var el = document.getElementById('conteudo-ajustar');
+  if(!CONFIG.token){ el.innerHTML = '<p class="ajuda">Cola o token de acesso lá em cima primeiro.</p>'; return; }
   el.innerHTML = '<p class="ajuda">Carregando...</p>';
+  pastaSelecionadaAjustar = null;
   try{
-    var resp = await apiGithub('git/trees/main?recursive=1');
-    if(!resp.ok){ el.innerHTML = '<p class="ajuda">Não consegui listar (código '+resp.status+').</p>'; return; }
-    var data = await resp.json();
-    var grupos = {};
-    (data.tree||[]).forEach(function(item){
-      if(item.type!=='blob') return;
-      if(!/\.md$/.test(item.path)) return;
-      var partes = item.path.split('/');
-      var arquivo = partes.pop().replace(/\.md$/,'');
-      var pasta = partes.join('/');
-      if(!grupos[pasta]) grupos[pasta] = [];
-      grupos[pasta].push(arquivo);
-    });
-    var pastas = Object.keys(grupos).sort();
-    if(!pastas.length){ el.innerHTML = '<p class="ajuda">Nenhuma aula salva ainda.</p>'; return; }
-    var html = '';
-    pastas.forEach(function(p){
-      html += '<div style="margin-top:10px;"><strong>'+escapeHtml(p||'(sem pasta)')+'</strong><div class="chips" style="margin-top:6px;">';
-      grupos[p].forEach(function(a){
-        html += '<span class="chip" onclick=\'abrirAulaExistente('+JSON.stringify(p)+','+JSON.stringify(a)+')\'>'+escapeHtml(a)+'</span>';
-      });
-      html += '</div></div>';
-    });
-    el.innerHTML = html;
+    var estrutura = await carregarEstrutura(true);
+    renderTelaAjustar(estrutura);
   }catch(e){
-    el.innerHTML = '<p class="ajuda">Não consegui listar as aulas agora.</p>';
+    el.innerHTML = '<p class="ajuda">Não consegui carregar: '+e.message+'</p>';
   }
 }
-async function abrirAulaExistente(pasta, arquivoNome){
-  if(!CONFIG.token){ mostrarMensagem('erro','Cola o token de acesso lá em cima antes.'); return; }
+function renderTelaAjustar(estrutura){
+  var el = document.getElementById('conteudo-ajustar');
+  var todasPastas = Object.keys(estrutura.porPasta);
+  if(!todasPastas.length){ el.innerHTML = '<p class="ajuda">Nenhuma aula salva ainda.</p>'; return; }
+  if(pastaSelecionadaAjustar===null){
+    var html = '<div class="grid-pastas">';
+    todasPastas.sort().forEach(function(p){
+      var qtd = estrutura.porPasta[p].length;
+      html += '<button type="button" class="pasta-card" onclick="abrirPastaAjustar('+escapeHtml(JSON.stringify(p))+')">';
+      html += '<strong>'+escapeHtml(p||'(sem pasta)')+'</strong><br><span class="ajuda">'+qtd+' aula(s)</span>';
+      html += '</button>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+    return;
+  }
+  var pasta = pastaSelecionadaAjustar;
+  var aulas = (estrutura.porPasta[pasta]||[]).slice().sort();
+  var html = '<div class="acoes" style="margin-bottom:10px;">';
+  html += '<button class="btn-secundario btn-mini" onclick="voltarPastasAjustar()">← Pastas</button>';
+  if(pasta) html += '<button class="btn-perigo btn-mini" onclick="excluirPasta('+escapeHtml(JSON.stringify(pasta))+')">Excluir pasta inteira</button>';
+  html += '</div>';
+  html += '<h3>'+escapeHtml(pasta||'(sem pasta)')+'</h3>';
+  aulas.forEach(function(a){
+    html += '<div class="aula-item"><span>'+escapeHtml(a)+'</span><div class="acoes">';
+    html += '<button class="btn-secundario btn-mini" onclick="editarAulaExistente('+escapeHtml(JSON.stringify(pasta))+','+escapeHtml(JSON.stringify(a))+')">Editar</button>';
+    html += '<button class="btn-perigo btn-mini" onclick="excluirAula('+escapeHtml(JSON.stringify(pasta))+','+escapeHtml(JSON.stringify(a))+')">Excluir</button>';
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+function abrirPastaAjustar(pasta){
+  pastaSelecionadaAjustar = pasta;
+  renderTelaAjustar(ESTRUTURA_CACHE);
+}
+function voltarPastasAjustar(){
+  pastaSelecionadaAjustar = null;
+  renderTelaAjustar(ESTRUTURA_CACHE);
+}
+
+async function editarAulaExistente(pasta, arquivoNome){
+  if(!CONFIG.token){ alert('Cola o token de acesso lá em cima antes.'); return; }
   var prefixo = pasta ? pasta+'/' : '';
-  mostrarMensagem('info','Carregando aula...');
   try{
     var resp = await apiGithub('contents/'+prefixo+arquivoNome+'.estado.json');
     if(resp.status===404){
-      mostrarMensagem('erro','Essa aula ("'+arquivoNome+'") foi criada antes dessa função de editar existir, não dá pra carregar ela de volta pro formulário. Se precisar mudar ela, dá pra recriar do zero com o mesmo nome (vai sobrescrever o conteúdo).');
+      alert('Essa aula ("'+arquivoNome+'") foi criada antes dessa função de editar existir, não dá pra carregar ela de volta pro formulário. Se precisar mudar ela, dá pra recriar do zero com o mesmo nome (vai sobrescrever o conteúdo).');
       return;
     }
     if(!resp.ok){ throw new Error('código '+resp.status); }
@@ -820,14 +1095,70 @@ async function abrirAulaExistente(pasta, arquivoNome){
     novoEstado.arquivoNome = arquivoNome;
     state = novoEstado;
     arquivoNomeEditadoManual = true;
+    document.getElementById('titulo-tela-editor').textContent = 'Editando: '+state.aulaNome;
+    mostrarTela('editor');
+    await popularSelectPasta();
     preencherFormularioComEstado();
     salvarRascunho();
     render();
     mostrarMensagem('ok','Editando a aula "'+state.aulaNome+'". Faça as mudanças e clique em Salvar de novo.');
-    window.scrollTo({top:0, behavior:'smooth'});
   }catch(e){
-    mostrarMensagem('erro','Não consegui carregar essa aula: '+e.message);
+    alert('Não consegui carregar essa aula: '+e.message);
   }
+}
+
+/* ==================== EXCLUIR AULA / PASTA ==================== */
+async function removerDoPxtJson(caminhoArquivo){
+  try{
+    var respPxt = await apiGithub('contents/pxt.json');
+    if(!respPxt.ok) return;
+    var pxtInfo = await respPxt.json();
+    var pxtJson = JSON.parse(decodeURIComponent(escape(atob(pxtInfo.content.replace(/\n/g,'')))));
+    if(!pxtJson.files) return;
+    var idx = pxtJson.files.indexOf(caminhoArquivo);
+    if(idx===-1) return;
+    pxtJson.files.splice(idx,1);
+    await apiGithub('contents/pxt.json', {method:'PUT', body: JSON.stringify({
+      message:'Remove '+caminhoArquivo+' da lista de aulas',
+      content: utf8ToBase64(JSON.stringify(pxtJson,null,4)+'\n'),
+      sha: pxtInfo.sha
+    })});
+  }catch(e){ /* não trava a exclusão principal */ }
+}
+async function excluirArquivosDaAula(pasta, arquivoNome){
+  var prefixo = pasta ? pasta+'/' : '';
+  var nomes = [prefixo+arquivoNome+'.md', prefixo+arquivoNome+'.html', prefixo+arquivoNome+'.estado.json'];
+  for(var i=0;i<nomes.length;i++){
+    var resp = await apiGithub('contents/'+nomes[i]);
+    if(resp.status===200){
+      var info = await resp.json();
+      await apiGithub('contents/'+nomes[i], {method:'DELETE', body: JSON.stringify({message:'Remove '+nomes[i], sha: info.sha})});
+    }
+  }
+  await removerDoPxtJson(prefixo+arquivoNome+'.md');
+}
+async function excluirAula(pasta, arquivoNome){
+  if(!confirm('Excluir a aula "'+arquivoNome+'" pra sempre? Isso apaga os arquivos dela no GitHub (não dá pra desfazer por aqui).')) return;
+  try{
+    await excluirArquivosDaAula(pasta, arquivoNome);
+    var estrutura = await carregarEstrutura(true);
+    renderTelaAjustar(estrutura);
+  }catch(e){ alert('Não consegui excluir: '+e.message); }
+}
+async function excluirPasta(pasta){
+  if(!pasta) return;
+  if(!confirm('Excluir a pasta "'+pasta+'" inteira, com todas as aulas dentro? Isso apaga tudo dela no GitHub.')) return;
+  if(!confirm('Tem certeza mesmo? Essa ação não tem volta.')) return;
+  try{
+    var estrutura = await carregarEstrutura();
+    var aulas = (estrutura.porPasta[pasta]||[]).slice();
+    for(var i=0;i<aulas.length;i++){
+      await excluirArquivosDaAula(pasta, aulas[i]);
+    }
+    pastaSelecionadaAjustar = null;
+    var nova = await carregarEstrutura(true);
+    renderTelaAjustar(nova);
+  }catch(e){ alert('Não consegui excluir a pasta: '+e.message); }
 }
 function aguardar(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
 async function esperarPaginaNoAr(url){
@@ -1004,18 +1335,31 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '    text-transform:uppercase;\n'
     + '    color:var(--accent-2);\n'
     + '  }\n'
-    + '  .editor-topline{\n'
+    + '  .editor-topline-mini{\n'
     + '    display:flex;\n'
-    + '    align-items:baseline;\n'
-    + '    gap:12px;\n'
+    + '    align-items:center;\n'
+    + '    justify-content:space-between;\n'
+    + '    gap:10px;\n'
     + '    flex-wrap:wrap;\n'
     + '    flex-shrink:0;\n'
     + '  }\n'
-    + '  .editor-topline h2{\n'
+    + '  .editor-topline-mini .titulo-aula{\n'
     + '    font-family:\'Baloo 2\', \'Nunito Sans\', sans-serif;\n'
     + '    font-weight:700;\n'
-    + '    font-size:1.15rem;\n'
-    + '    margin:0;\n'
+    + '    font-size:1rem;\n'
+    + '    color:var(--text);\n'
+    + '    white-space:nowrap;\n'
+    + '    overflow:hidden;\n'
+    + '    text-overflow:ellipsis;\n'
+    + '  }\n'
+    + '  .editor-topline-mini .botoes{\n'
+    + '    display:flex;\n'
+    + '    gap:8px;\n'
+    + '    flex-shrink:0;\n'
+    + '  }\n'
+    + '  .editor-topline-mini .cta{\n'
+    + '    padding:8px 16px;\n'
+    + '    font-size:.85rem;\n'
     + '  }\n'
     + '  h1{\n'
     + '    font-family:\'Baloo 2\', \'Nunito Sans\', sans-serif;\n'
@@ -1057,33 +1401,26 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '  }\n'
     + '  .editor-frame{\n'
     + '    background:var(--surface);\n'
-    + '    border-radius:20px;\n'
+    + '    border-radius:14px;\n'
     + '    box-shadow: var(--shadow);\n'
-    + '    padding:14px;\n'
+    + '    padding:6px;\n'
     + '    display:flex;\n'
     + '    flex-direction:column;\n'
     + '    align-items:center;\n'
     + '    justify-content:center;\n'
-    + '    gap:18px;\n'
     + '    width:100%;\n'
     + '    flex:1;\n'
     + '    min-height:0;\n'
     + '    margin: 0 auto;\n'
     + '    position:relative;\n'
     + '  }\n'
-    + '  @media (orientation: landscape){\n'
-    + '    .editor-frame{\n'
-    + '      width:90%;\n'
-    + '      max-width:1400px;\n'
-    + '    }\n'
-    + '  }\n'
     + '  .editor-frame iframe{\n'
     + '    position:absolute;\n'
-    + '    inset:14px;\n'
-    + '    width:calc(100% - 28px);\n'
-    + '    height:calc(100% - 28px);\n'
+    + '    inset:6px;\n'
+    + '    width:calc(100% - 12px);\n'
+    + '    height:calc(100% - 12px);\n'
     + '    border:none;\n'
-    + '    border-radius:14px;\n'
+    + '    border-radius:10px;\n'
     + '    background:var(--surface-2);\n'
     + '    opacity:0;\n'
     + '    transition:opacity .3s ease;\n'
@@ -1091,13 +1428,13 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '  .editor-frame iframe.ready{\n'
     + '    opacity:1;\n'
     + '  }\n'
-    + '  .fallback-link{\n'
-    + '    align-self:center;\n'
-    + '    font-size:.85rem;\n'
+    + '  .fallback-link-mini{\n'
+    + '    text-align:center;\n'
+    + '    font-size:.72rem;\n'
     + '    color:var(--text-muted);\n'
     + '    flex-shrink:0;\n'
     + '  }\n'
-    + '  .fallback-link a{ color:var(--accent-2); font-weight:600; }\n'
+    + '  .fallback-link-mini a{ color:var(--accent-2); font-weight:600; }\n'
     + '  .editor-status{\n'
     + '    color:var(--text-muted);\n'
     + '    font-family:\'Nunito Sans\', sans-serif;\n'
@@ -1188,19 +1525,18 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '    </section>\n'
     + '\n'
     + '    <section class="slide editor-slide" data-slide="1" hidden>\n'
-    + '      <div class="editor-topline">\n'
-    + '        <span class="eyebrow">Mão na massa</span>\n'
-    + '        <h2>Monte o código aqui embaixo</h2>\n'
+    + '      <div class="editor-topline-mini">\n'
+    + '        <span class="titulo-aula">'+tituloEsc+'</span>\n'
+    + '        <div class="botoes">\n'
+    + '          <button class="cta ghost" id="btn-back-1">← Voltar</button>\n'
+    + '          <button class="cta" id="btn-next-1">Consegui! <span aria-hidden="true">→</span></button>\n'
+    + '        </div>\n'
     + '      </div>\n'
     + '      <div class="editor-frame" id="editor-frame">\n'
     + '        <div id="editor-status" class="editor-status">Carregando o editor...</div>\n'
     + '      </div>\n'
-    + '      <div class="fallback-link">\n'
-    + '        Não carregou? <a href="'+linkMakecode+'" target="_blank" rel="noopener">abra o editor numa aba nova</a>.\n'
-    + '      </div>\n'
-    + '      <div class="controls">\n'
-    + '        <button class="cta ghost" id="btn-back-1">← Voltar</button>\n'
-    + '        <button class="cta" id="btn-next-1">Consegui! <span aria-hidden="true">→</span></button>\n'
+    + '      <div class="fallback-link-mini">\n'
+    + '        Não carregou? <a href="'+linkMakecode+'" target="_blank" rel="noopener">abrir numa aba nova</a>\n'
     + '      </div>\n'
     + '    </section>\n'
     + '\n'
@@ -1412,34 +1748,20 @@ async function salvarNoGithub(){
         + 'Caminho técnico: <code>'+caminho+'</code>'
       );
     }
-    carregarListaAulas();
+    ESTRUTURA_CACHE = null;
   } catch(err){
     mostrarMensagem('erro', 'Deu erro: '+err.message);
   }
-}
-
-/* ==================== EXTRAS ==================== */
-function copiarPreview(){
-  navigator.clipboard.writeText(gerarMarkdown()).then(function(){
-    mostrarMensagem('info','Conteúdo copiado.');
-  });
-}
-function baixarMd(){
-  var blob = new Blob([gerarMarkdown()], {type:'text/markdown'});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = (state.arquivoNome||'aula')+'.md';
-  a.click();
 }
 
 /* ==================== INÍCIO ==================== */
 carregarConfigGithub();
 carregarRascunho();
 if(state.aulaNome) arquivoNomeEditadoManual = true;
-preencherFormularioComEstado();
 if(!state.passos.length) adicionarPasso();
+preencherFormularioComEstado();
 render();
-carregarListaAulas();
+mostrarTela('inicio');
 </script>
 </body>
 </html>
