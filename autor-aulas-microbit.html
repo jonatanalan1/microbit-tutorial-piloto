@@ -108,6 +108,7 @@
   .ajuda{font-size:12px;color:#5f6368;margin-top:4px;}
   .selo-token{font-size:12px;padding:2px 8px;border-radius:10px;background:#e6f4ea;color:var(--verde);}
   .selo-token.sem{background:#fdeceb;color:var(--vermelho);}
+  .resumo-token{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;flex-wrap:wrap;}
   details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--azul-escuro);}
   .rodape{text-align:center;font-size:12px;color:#80868b;margin-top:24px;}
   .tela{display:none;}
@@ -143,6 +144,17 @@
   .emoji-btn:hover{background:#e2e7ec;}
   .campo-com-botao{display:flex;gap:8px;align-items:center;}
   .campo-com-botao input{flex:1;}
+  .popup-salvando{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:60;display:none;align-items:center;justify-content:center;padding:16px;}
+  .popup-salvando.aberto{display:flex;}
+  .popup-salvando-inner{background:#fff;border-radius:12px;padding:26px 24px;max-width:360px;width:100%;text-align:center;}
+  .spinner-salvando{width:36px;height:36px;border-radius:50%;border:4px solid #e2e7ec;border-top-color:var(--azul);margin:0 auto 14px auto;animation:girar .8s linear infinite;}
+  .popup-salvando.concluido .spinner-salvando{border-top-color:var(--verde);animation:none;}
+  .popup-salvando.erro .spinner-salvando{border-top-color:var(--vermelho);animation:none;}
+  @keyframes girar{ to{ transform:rotate(360deg); } }
+  #texto-salvando{font-size:14px;line-height:1.5;}
+  #texto-salvando a{color:var(--azul);font-weight:600;}
+  #btn-fechar-salvando{display:none;margin-top:16px;}
+  .popup-salvando.concluido #btn-fechar-salvando, .popup-salvando.erro #btn-fechar-salvando{display:inline-block;}
 </style>
 </head>
 <body>
@@ -153,34 +165,40 @@
   </div>
 
   <div class="card" id="card-token">
-    <h2>Acesso ao GitHub <span id="selo-token" class="selo-token sem">sem token salvo</span></h2>
-    <div class="linha">
-      <div>
-        <label>Usuário/organização do GitHub</label>
-        <input type="text" id="campo-owner">
-      </div>
-      <div>
-        <label>Nome do repositório</label>
-        <input type="text" id="campo-repo">
-      </div>
+    <div id="resumo-token" class="resumo-token" style="display:none;">
+      <span>Acesso ao GitHub <span id="selo-token-resumo" class="selo-token">token salvo</span></span>
+      <button type="button" class="btn-secundario btn-mini" onclick="mostrarFormToken()">Trocar acesso</button>
     </div>
-    <label>Token pessoal de acesso (fine-grained, só de escrita nesse repositório)</label>
-    <input type="password" id="campo-token" placeholder="github_pat_xxxxxxxxxxxxxxxxxxxx">
-    <p class="ajuda">O token fica salvo só neste navegador (não vai pro código, não sai daqui). Se ainda não gerou o token, veja o passo a passo abaixo.</p>
-    <div class="acoes" style="margin-top:8px;">
-      <button class="btn-principal btn-mini" onclick="salvarConfigGithub()">Salvar acesso</button>
-      <button class="btn-perigo btn-mini" onclick="apagarConfigGithub()">Apagar token salvo</button>
+    <div id="form-token">
+      <h2>Acesso ao GitHub <span id="selo-token" class="selo-token sem">sem token salvo</span></h2>
+      <div class="linha">
+        <div>
+          <label>Usuário/organização do GitHub</label>
+          <input type="text" id="campo-owner">
+        </div>
+        <div>
+          <label>Nome do repositório</label>
+          <input type="text" id="campo-repo">
+        </div>
+      </div>
+      <label>Token pessoal de acesso (fine-grained, só de escrita nesse repositório)</label>
+      <input type="password" id="campo-token" placeholder="github_pat_xxxxxxxxxxxxxxxxxxxx">
+      <p class="ajuda">O token fica salvo só neste navegador (não vai pro código, não sai daqui). Se ainda não gerou o token, veja o passo a passo abaixo.</p>
+      <div class="acoes" style="margin-top:8px;">
+        <button class="btn-principal btn-mini" onclick="salvarConfigGithub()">Salvar acesso</button>
+        <button class="btn-perigo btn-mini" onclick="apagarConfigGithub()">Apagar token salvo</button>
+      </div>
+      <details style="margin-top:12px;">
+        <summary>Como gerar o token (fazer só uma vez)</summary>
+        <ol style="font-size:13px;color:#3c4043;">
+          <li>No GitHub, vá em Settings da sua conta &gt; Developer settings &gt; Personal access tokens &gt; Fine-grained tokens &gt; Generate new token.</li>
+          <li>Em "Repository access", escolha "Only select repositories" e selecione o repositório da aula.</li>
+          <li>Em "Permissions" &gt; "Repository permissions", ache "Contents" e mude de "No access" para "Read and write".</li>
+          <li>Defina uma validade (ex: 1 ano) e clique em "Generate token".</li>
+          <li>Copie o código gerado (começa com <code>github_pat_</code>) e cole no campo acima.</li>
+        </ol>
+      </details>
     </div>
-    <details style="margin-top:12px;">
-      <summary>Como gerar o token (fazer só uma vez)</summary>
-      <ol style="font-size:13px;color:#3c4043;">
-        <li>No GitHub, vá em Settings da sua conta &gt; Developer settings &gt; Personal access tokens &gt; Fine-grained tokens &gt; Generate new token.</li>
-        <li>Em "Repository access", escolha "Only select repositories" e selecione o repositório da aula.</li>
-        <li>Em "Permissions" &gt; "Repository permissions", ache "Contents" e mude de "No access" para "Read and write".</li>
-        <li>Defina uma validade (ex: 1 ano) e clique em "Generate token".</li>
-        <li>Copie o código gerado (começa com <code>github_pat_</code>) e cole no campo acima.</li>
-      </ol>
-    </details>
   </div>
 
   <div id="tela-inicio" class="tela ativa">
@@ -281,6 +299,14 @@
       <button type="button" class="btn-secundario btn-mini" onclick="fecharSeletorEmoji()">Fechar</button>
     </div>
     <div id="grid-emoji" class="grid-emoji"></div>
+  </div>
+</div>
+
+<div id="popup-salvando" class="popup-salvando">
+  <div class="popup-salvando-inner">
+    <div class="spinner-salvando"></div>
+    <div id="texto-salvando">Salvando...</div>
+    <button type="button" id="btn-fechar-salvando" class="btn-secundario btn-mini" onclick="fecharPopupSalvando()">Fechar</button>
   </div>
 </div>
 
@@ -487,9 +513,9 @@ var CATALOG = [
     params:[{key:'eixo', label:'Qual eixo', type:'select', options:[['X','X (lados)'],['Y','Y (frente/trás)'],['Z','Z (cima/baixo)']]}],
     render:function(v){ return 'basic.showNumber(input.acceleration(Dimension.'+v.eixo+'))'; }},
 
-  {id:'mover_servo', categoria:'Extensões', label:'Mover o Servo Motor pra um ângulo (extensão, em teste)', hint:'servo:mover motor', container:false, extensao:'servo',
+  {id:'mover_servo', categoria:'Pinos', label:'Mover um Servo Motor pra um ângulo', hint:'pinos:mover servo', container:false,
     params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}, {key:'angulo', label:'Ângulo (0 a 180)', type:'number', def:90}],
-    render:function(v){ return 'servos.'+v.pino+'.setAngle('+v.angulo+')'; }}
+    render:function(v){ return 'pins.servoWritePin(AnalogPin.'+v.pino+', '+v.angulo+')'; }}
 ];
 var CATALOG_MAP = {};
 CATALOG.forEach(function(c){ CATALOG_MAP[c.id] = c; });
@@ -639,9 +665,10 @@ function renderPassoCodigo(passo){
   var topo = passo.blocos.filter(function(b){ return !b.dentroDe; });
   return topo.map(function(b){ return renderNode(b, passo.blocos); }).join('\n');
 }
-var EXTENSOES_PACOTE = {
-  servo: 'servo=github:microsoft/pxt-servo'
-};
+// Nenhum bloco usa extensão de verdade por enquanto (o Servo Motor virou bloco
+// nativo, ver abaixo). Deixa esse mapa pronto pra quando precisar de uma
+// extensão de terceiro de verdade: id da extensão -> linha do pacote.
+var EXTENSOES_PACOTE = {};
 function aulaUsaExtensao(extensaoId){
   return state.passos.some(function(p){
     return p.blocos.some(function(b){
@@ -977,6 +1004,19 @@ function atualizarSeloToken(){
   var selo = document.getElementById('selo-token');
   if(CONFIG.token){ selo.textContent = 'token salvo'; selo.classList.remove('sem'); }
   else { selo.textContent = 'sem token salvo'; selo.classList.add('sem'); }
+  var formToken = document.getElementById('form-token');
+  var resumoToken = document.getElementById('resumo-token');
+  if(CONFIG.token){
+    formToken.style.display = 'none';
+    resumoToken.style.display = 'flex';
+  } else {
+    formToken.style.display = '';
+    resumoToken.style.display = 'none';
+  }
+}
+function mostrarFormToken(){
+  document.getElementById('form-token').style.display = '';
+  document.getElementById('resumo-token').style.display = 'none';
 }
 
 /* ==================== SALVAR NO GITHUB ==================== */
@@ -989,6 +1029,22 @@ function utf8ToBase64(str){
 function mostrarMensagem(tipo, texto){
   var classe = tipo==='ok'?'msg-ok':(tipo==='erro'?'msg-erro':'msg-info');
   document.getElementById('area-mensagem').innerHTML = '<div class="msg '+classe+'">'+texto+'</div>';
+}
+function abrirPopupSalvando(){
+  var popup = document.getElementById('popup-salvando');
+  popup.classList.remove('concluido','erro');
+  popup.classList.add('aberto');
+  document.getElementById('texto-salvando').innerHTML = 'Salvando...';
+}
+function statusSalvar(tipo, texto){
+  mostrarMensagem(tipo, texto);
+  var popup = document.getElementById('popup-salvando');
+  document.getElementById('texto-salvando').innerHTML = texto;
+  if(tipo==='ok'){ popup.classList.add('concluido'); popup.classList.remove('erro'); }
+  else if(tipo==='erro'){ popup.classList.add('erro'); popup.classList.remove('concluido'); }
+}
+function fecharPopupSalvando(){
+  document.getElementById('popup-salvando').classList.remove('aberto','concluido','erro');
 }
 function apiGithub(path, opcoes){
   opcoes = opcoes || {};
@@ -1167,7 +1223,7 @@ async function esperarPaginaNoAr(url){
       var r = await fetch(url, {method:'GET', cache:'no-store'});
       if(r.ok) return true;
     }catch(e){}
-    mostrarMensagem('info','Aula salva! Esperando a página ficar no ar... ('+(i+1)+'/20)');
+    statusSalvar('info','Aula salva! Esperando a página ficar no ar... ('+(i+1)+'/20)');
     await aguardar(2000);
   }
   return false;
@@ -1252,9 +1308,9 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '  body{ background:var(--bg); color:var(--text); }\n'
     + '\n'
     + '  .app{\n'
-    + '    max-width: 1180px;\n'
+    + '    width:100%;\n'
     + '    margin: 0 auto;\n'
-    + '    padding: 20px 16px;\n'
+    + '    padding: 12px 16px;\n'
     + '    height:100%;\n'
     + '    min-height:0;\n'
     + '    display:flex;\n'
@@ -1361,6 +1417,12 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '    padding:8px 16px;\n'
     + '    font-size:.85rem;\n'
     + '  }\n'
+    + '  .editor-topline-mini .fallback-inline{\n'
+    + '    font-size:.72rem;\n'
+    + '    color:var(--text-muted);\n'
+    + '    white-space:nowrap;\n'
+    + '  }\n'
+    + '  .editor-topline-mini .fallback-inline a{ color:var(--accent-2); font-weight:600; }\n'
     + '  h1{\n'
     + '    font-family:\'Baloo 2\', \'Nunito Sans\', sans-serif;\n'
     + '    font-weight:700;\n'
@@ -1428,13 +1490,6 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '  .editor-frame iframe.ready{\n'
     + '    opacity:1;\n'
     + '  }\n'
-    + '  .fallback-link-mini{\n'
-    + '    text-align:center;\n'
-    + '    font-size:.72rem;\n'
-    + '    color:var(--text-muted);\n'
-    + '    flex-shrink:0;\n'
-    + '  }\n'
-    + '  .fallback-link-mini a{ color:var(--accent-2); font-weight:600; }\n'
     + '  .editor-status{\n'
     + '    color:var(--text-muted);\n'
     + '    font-family:\'Nunito Sans\', sans-serif;\n'
@@ -1527,6 +1582,7 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '    <section class="slide editor-slide" data-slide="1" hidden>\n'
     + '      <div class="editor-topline-mini">\n'
     + '        <span class="titulo-aula">'+tituloEsc+'</span>\n'
+    + '        <span class="fallback-inline">Não carregou? <a href="'+linkMakecode+'" target="_blank" rel="noopener">abrir numa aba nova</a></span>\n'
     + '        <div class="botoes">\n'
     + '          <button class="cta ghost" id="btn-back-1">← Voltar</button>\n'
     + '          <button class="cta" id="btn-next-1">Consegui! <span aria-hidden="true">→</span></button>\n'
@@ -1534,9 +1590,6 @@ function gerarPaginaAulaHtml(caminho, titulo, visual){
     + '      </div>\n'
     + '      <div class="editor-frame" id="editor-frame">\n'
     + '        <div id="editor-status" class="editor-status">Carregando o editor...</div>\n'
-    + '      </div>\n'
-    + '      <div class="fallback-link-mini">\n'
-    + '        Não carregou? <a href="'+linkMakecode+'" target="_blank" rel="noopener">abrir numa aba nova</a>\n'
     + '      </div>\n'
     + '    </section>\n'
     + '\n'
@@ -1644,17 +1697,18 @@ function urlDaPagina(nomeArquivoHtml){
 }
 
 async function salvarNoGithub(){
-  if(!CONFIG.token){ mostrarMensagem('erro','Cola o token de acesso lá em cima antes de salvar.'); return; }
-  if(!state.aulaNome.trim()){ mostrarMensagem('erro','Falta o nome da aula.'); return; }
-  if(!state.arquivoNome.trim()){ mostrarMensagem('erro','Falta o nome do arquivo.'); return; }
-  if(!state.passos.length){ mostrarMensagem('erro','Adiciona pelo menos um passo antes de salvar.'); return; }
+  abrirPopupSalvando();
+  if(!CONFIG.token){ statusSalvar('erro','Cola o token de acesso lá em cima antes de salvar.'); return; }
+  if(!state.aulaNome.trim()){ statusSalvar('erro','Falta o nome da aula.'); return; }
+  if(!state.arquivoNome.trim()){ statusSalvar('erro','Falta o nome do arquivo.'); return; }
+  if(!state.passos.length){ statusSalvar('erro','Adiciona pelo menos um passo antes de salvar.'); return; }
 
   var prefixo = state.pasta ? slug(state.pasta)+'/' : '';
   var nomeArquivo = prefixo+state.arquivoNome+'.md';
   var nomeArquivoHtml = prefixo+state.arquivoNome+'.html';
   var nomeArquivoEstado = prefixo+state.arquivoNome+'.estado.json';
   var caminho = 'github:'+CONFIG.owner+'/'+CONFIG.repo+'/'+prefixo+state.arquivoNome;
-  mostrarMensagem('info','Salvando...');
+  statusSalvar('info','Salvando...');
 
   try{
     // 1) pxt.json: garante que o arquivo novo está listado
@@ -1684,6 +1738,7 @@ async function salvarNoGithub(){
       shaExistente = infoArq.sha;
       if(!confirm('Já existe uma aula "'+nomeArquivo+'" nesse repositório. Quer sobrescrever (o conteúdo e a página HTML) com essa versão nova?')){
         mostrarMensagem('info','Salvamento cancelado. Nada foi alterado.');
+        fecharPopupSalvando();
         return;
       }
     } else if(respArq.status!==404){
@@ -1700,7 +1755,7 @@ async function salvarNoGithub(){
     if(!putArq.ok){ var e2 = await putArq.json().catch(function(){return {};}); throw new Error('Não consegui salvar o arquivo da aula: '+(e2.message||putArq.status)); }
 
     // 4) gera e grava a página HTML pronta (o "embedado"), pra já sair usável
-    mostrarMensagem('info','Aula salva, gerando a página pronta...');
+    statusSalvar('info','Aula salva, gerando a página pronta...');
     var respHtml = await apiGithub('contents/'+nomeArquivoHtml);
     var shaHtmlExistente = null;
     if(respHtml.status===200){
@@ -1733,16 +1788,16 @@ async function salvarNoGithub(){
 
     // 6) espera a página realmente ficar no ar antes de dar o link, pra não dar 404
     var urlPagina = urlDaPagina(nomeArquivoHtml);
-    mostrarMensagem('info','Aula salva! Esperando a página ficar no ar...');
+    statusSalvar('info','Aula salva! Esperando a página ficar no ar...');
     var noAr = await esperarPaginaNoAr(urlPagina);
     if(noAr){
-      mostrarMensagem('ok',
+      statusSalvar('ok',
         'Aula salva e já no ar. Pode abrir:<br>'
         + '<a href="'+urlPagina+'" target="_blank">'+urlPagina+'</a><br><br>'
         + 'Caminho técnico (pra usar em outro lugar, se precisar): <code>'+caminho+'</code>'
       );
     } else {
-      mostrarMensagem('ok',
+      statusSalvar('ok',
         'Aula salva! O GitHub Pages tá demorando mais que o normal pra publicar dessa vez. Espera mais um pouco e tenta esse link:<br>'
         + '<a href="'+urlPagina+'" target="_blank">'+urlPagina+'</a><br><br>'
         + 'Caminho técnico: <code>'+caminho+'</code>'
@@ -1750,7 +1805,7 @@ async function salvarNoGithub(){
     }
     ESTRUTURA_CACHE = null;
   } catch(err){
-    mostrarMensagem('erro', 'Deu erro: '+err.message);
+    statusSalvar('erro', 'Deu erro: '+err.message);
   }
 }
 
