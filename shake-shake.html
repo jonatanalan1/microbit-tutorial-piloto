@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shake-Shake — aula de micro:bit</title>
+<style>
+  *{box-sizing:border-box;}
+  html, body{height:100%;margin:0;font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f6f8;color:#3c4043;}
+  #barra{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#fff;border-bottom:1px solid #d7dce1;}
+  #barra h1{font-size:15px;margin:0;font-weight:600;}
+  #barra .status{font-size:12px;color:#5f6368;}
+  #link-alternativo{font-size:12px;color:#5f6368;}
+  #link-alternativo a{color:#1a73e8;}
+  #editor-container{height:calc(100% - 45px);width:100%;}
+  #editor-container iframe{width:100%;height:100%;border:none;display:block;}
+</style>
+</head>
+<body>
+<div id="barra">
+  <h1>Shake-Shake</h1>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="status" id="status-carregamento">carregando...</span>
+    <span id="link-alternativo"><a href="https://makecode.microbit.org/#tutorial:github:jonatanalan1/microbit-tutorial-piloto/shake-shake" target="_blank">abrir em outra aba, se não carregar aqui</a></span>
+  </div>
+</div>
+<div id="editor-container"></div>
+<script type="module">
+  import {
+    MakeCodeFrameDriver,
+    createMakeCodeURL,
+    emptyMakeCodeProject,
+  } from "https://cdn.jsdelivr.net/npm/@microbit/makecode-embed@0.7.4/dist/esm/vanilla/index.js";
+
+  var statusEl = document.getElementById('status-carregamento');
+
+  // motor tecnico, sem alteracao em relacao ao que ja foi validado.
+  function iniciarEditorMicrobit(containerEl, caminhoDaAula, tituloDaAula) {
+    var iframe = document.createElement('iframe');
+    iframe.allow = 'usb; autoplay; camera; microphone;';
+    containerEl.appendChild(iframe);
+    iframe.src = createMakeCodeURL('https://makecode.microbit.org', undefined, undefined, 1, undefined);
+
+    var iniciado = false;
+    var driver = new MakeCodeFrameDriver(
+      {
+        controllerId: 'aula-microbit',
+        initialProjects: async function () { return [emptyMakeCodeProject]; },
+        onWorkspaceLoaded: function () {
+          if (iniciado) return;
+          iniciado = true;
+          driver.startActivity({
+            activityType: 'tutorial',
+            path: caminhoDaAula,
+            title: tituloDaAula,
+          }).then(function(){ statusEl.textContent = ''; })
+            .catch(function(e){ statusEl.textContent = 'erro ao abrir a aula: ' + e; });
+        },
+        onWorkspaceSave: function () {},
+      },
+      function () { return iframe; }
+    );
+    driver.initialize();
+  }
+
+  iniciarEditorMicrobit(document.getElementById('editor-container'), "github:jonatanalan1/microbit-tutorial-piloto/shake-shake", "Shake-Shake");
+</script>
+</body>
+</html>
