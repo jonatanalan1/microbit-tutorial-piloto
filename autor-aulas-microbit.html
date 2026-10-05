@@ -84,17 +84,6 @@
     border-radius:14px;padding:3px 10px;font-size:12px;cursor:pointer;
   }
   .chip:hover{background:#d9e5fb;}
-  .bloco-item{
-    display:flex;justify-content:space-between;align-items:center;
-    background:#fff;border:1px solid var(--cinza-borda);border-radius:6px;
-    padding:8px 10px;margin-top:8px;font-size:13px;
-  }
-  .bloco-item .info{flex:1;}
-  .bloco-item .tag-container{color:var(--verde);font-weight:600;font-size:11px;}
-  .bloco-item .dentro-de{color:#5f6368;font-size:11px;}
-  .form-add-bloco{
-    margin-top:10px;padding:12px;background:#fff;border:1px dashed var(--cinza-borda);border-radius:8px;
-  }
   .preview{
     background:#0d1117;color:#c9d1d9;padding:14px;border-radius:8px;
     font-family: "SFMono-Regular", Consolas, monospace;
@@ -155,6 +144,175 @@
   #texto-salvando a{color:var(--azul);font-weight:600;}
   #btn-fechar-salvando{display:none;margin-top:16px;}
   .popup-salvando.concluido #btn-fechar-salvando, .popup-salvando.erro #btn-fechar-salvando{display:inline-block;}
+
+  /* ===== Seletor visual de blocos, estilo MakeCode (tudo com prefixo bp-) ===== */
+  .bp-area{margin-top:12px;}
+  /* área do passo: fundo quadriculado igual à área de trabalho do MakeCode */
+  .bp-ws{
+    --bp-fundo:#eef1f4;
+    position:relative;z-index:0;
+    background-color:var(--bp-fundo);
+    background-image:linear-gradient(rgba(189,195,199,.35) 1px, transparent 1px),linear-gradient(90deg, rgba(189,195,199,.35) 1px, transparent 1px);
+    background-size:24px 24px;
+    border:1px solid var(--cinza-borda);border-radius:8px;
+    padding:16px;overflow-x:auto;
+  }
+  .bp-ws-vazio{font-size:13px;color:#5f6368;margin:0 0 10px;}
+  .bp-ws-rodape{margin-top:16px;}
+  .bp-inst{width:max-content;}
+  .bp-ws > .bp-inst + .bp-inst-evento, .bp-ws > .bp-inst-evento + .bp-inst{margin-top:20px;}
+
+  /* peça */
+  .bp-peca, .bp-c-topo{
+    position:relative;
+    display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px;
+    min-height:40px;padding:6px 10px;
+    background:var(--cor);color:#fff;
+    font:700 13.5px/1.2 Monaco, Menlo, "Ubuntu Mono", Consolas, "source-code-pro", monospace;
+    border-radius:4px;
+    box-shadow:inset 0 -1px 0 rgba(0,0,0,.2);
+  }
+  /* encaixe: entalhe em cima (cor do fundo) e aba embaixo (cor do bloco) */
+  .bp-peca::before, .bp-c-topo::before{
+    content:"";position:absolute;top:0;left:12px;width:24px;height:6px;
+    background:var(--bp-fundo);
+    clip-path:polygon(0 0,100% 0,75% 100%,25% 100%);
+    z-index:1;
+  }
+  .bp-peca::after, .bp-c-base::after, .bp-c-topo::after{
+    content:"";position:absolute;bottom:-6px;left:12px;width:24px;height:6px;
+    background:var(--cor);
+    clip-path:polygon(0 0,100% 0,75% 100%,25% 100%);
+    z-index:3;
+  }
+  .bp-c-topo::after{left:28px;}
+  .bp-peca.bp-evento::before, .bp-peca.bp-evento::after,
+  .bp-c.bp-evento > .bp-c-topo::before, .bp-c.bp-evento > .bp-c-base::after{display:none;}
+  .bp-txt{white-space:nowrap;}
+
+  /* bloco em C (aceita outros dentro) */
+  .bp-c{display:inline-flex;flex-direction:column;align-items:stretch;}
+  .bp-c-topo{display:flex;border-radius:4px 4px 0 0;box-shadow:none;}
+  .bp-c-boca{border-left:16px solid var(--cor);min-height:26px;display:flex;flex-direction:column;align-items:flex-start;}
+  .bp-c-base{position:relative;height:22px;background:var(--cor);border-radius:0 0 4px 4px;box-shadow:inset 0 -1px 0 rgba(0,0,0,.2);}
+  .bp-evento.bp-c > .bp-c-topo{border-radius:10px 10px 0 0;}
+
+  /* campos dentro da peça */
+  .bp-oval{
+    display:inline-flex;align-items:center;justify-content:center;
+    height:28px;min-width:32px;padding:0 10px;border-radius:999px;
+    background:#fff;color:#262626;white-space:nowrap;
+  }
+  .bp-oval input[type=text], .bp-oval input[type=number]{
+    border:none;background:transparent;padding:0;margin:0;border-radius:0;
+    font:inherit;color:inherit;min-width:2ch;text-align:center;outline:none;
+    -moz-appearance:textfield;appearance:textfield;
+  }
+  .bp-oval input::-webkit-outer-spin-button, .bp-oval input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .bp-oval:focus-within{box-shadow:0 0 0 2px #fff, 0 0 0 4px rgba(0,0,0,.35);}
+  .bp-aspas{color:#a31515;}
+  .bp-oval.bp-var{background:#DC143C;color:#fff;border:1px solid rgba(0,0,0,.25);border-radius:4px;}
+  .bp-drop, .bp-ico{
+    position:relative;display:inline-flex;align-items:center;gap:6px;
+    height:28px;padding:0 8px 0 10px;border-radius:4px;
+    background:rgba(0,0,0,.15);border:1px solid rgba(0,0,0,.22);color:#fff;
+    white-space:nowrap;font:inherit;
+  }
+  .bp-drop select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;border:none;}
+  .bp-drop:focus-within, .bp-ico:focus-visible{outline:2px solid #fff;outline-offset:1px;}
+  .bp-seta{font-size:10px;}
+  .bp-ico{height:auto;min-height:28px;padding:3px 7px 3px 4px;}
+  button.bp-ico{cursor:pointer;}
+  button.bp-ico:hover{background:rgba(0,0,0,.26);}
+  .bp-leds{display:inline-grid;grid-template-columns:repeat(5,5px);gap:1.5px;}
+  .bp-leds i{display:block;width:5px;height:5px;border-radius:1px;background:rgba(0,0,0,.35);}
+  .bp-leds i.on{background:#fff;}
+  .bp-rep{
+    display:inline-flex;align-items:center;gap:6px;
+    min-height:32px;padding:2px 12px;border-radius:999px;
+    background:var(--cor);border:1px solid rgba(0,0,0,.2);color:#fff;white-space:nowrap;
+  }
+  .bp-rep.bp-hex{border:none;border-radius:0;padding:3px 17px;background:linear-gradient(rgba(0,0,0,.14),rgba(0,0,0,.14)),var(--cor);clip-path:polygon(14px 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,14px 100%,0 50%);}
+  .bp-grade{flex-basis:100%;order:2;display:grid;grid-template-columns:repeat(5,20px);gap:4px;padding:4px 0 6px;}
+  .bp-grade .bp-led{display:block;width:20px;height:20px;padding:0;border:none;border-radius:4px;background:rgba(0,0,0,.3);}
+  .bp-grade .bp-led.on{background:#fff;}
+  .bp-grade button.bp-led{cursor:pointer;}
+  .bp-grade button.bp-led:hover{box-shadow:0 0 0 2px rgba(255,255,255,.7);}
+
+  /* botões de subir/descer/encaixar/remover, no fim da peça */
+  .bp-acoes{order:1;display:inline-flex;gap:3px;margin-left:4px;opacity:0;transition:opacity .15s;}
+  .bp-barra:hover > .bp-acoes, .bp-barra:focus-within > .bp-acoes{opacity:1;}
+  @media (hover:none){ .bp-acoes{opacity:1;} }
+  .bp-acoes button, .bp-acao-sel{
+    position:relative;display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;padding:0;border:none;border-radius:50%;
+    background:rgba(255,255,255,.22);color:#fff;font:700 11px/1 -apple-system, "Segoe UI", Roboto, Arial, sans-serif;cursor:pointer;
+  }
+  .bp-acoes button:hover, .bp-acao-sel:hover{background:rgba(255,255,255,.4);}
+  .bp-acoes .bp-acao-x:hover{background:#fff;color:var(--vermelho);}
+  .bp-acao-sel select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;padding:0;border:none;}
+  .bp-aqui{
+    margin:6px 8px;padding:4px 10px;border-radius:4px;
+    background:rgba(255,255,255,.6);color:#3c4043;border:1.5px dashed rgba(0,0,0,.28);
+    font-size:12px;font-weight:600;
+  }
+  .bp-aqui:hover{background:#fff;}
+  @keyframes bp-entrar{from{transform:translateY(-8px);opacity:.2;}to{transform:none;opacity:1;}}
+  .bp-novo{animation:bp-entrar .35s ease-out;}
+  @media (prefers-reduced-motion: reduce){ .bp-novo{animation:none;} }
+
+  /* paleta: caixa de ferramentas branca + área escura com as peças */
+  .bp-paleta{display:flex;height:420px;margin-top:12px;border:1px solid var(--cinza-borda);border-radius:8px;overflow:hidden;background:#fff;}
+  .bp-toolbox{width:200px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid #e0e0e0;background:#fff;}
+  .bp-busca{display:flex;align-items:center;gap:6px;margin:8px;padding:0 10px;border:1px solid #c8c8c8;border-radius:4px;background:#fff;color:#777;}
+  .bp-busca:focus-within{border-color:var(--azul);}
+  .bp-busca input[type=text]{flex:1;min-width:0;border:none;padding:8px 0;background:transparent;outline:none;font-size:14px;}
+  .bp-busca svg{width:17px;height:17px;flex-shrink:0;}
+  .bp-cats{flex:1;overflow-y:auto;}
+  .bp-cat{
+    display:flex;align-items:center;gap:10px;width:100%;
+    padding:10px 12px;border:none;border-left:8px solid var(--cor);border-bottom:1px solid #ececec;border-radius:0;
+    background:#fff;color:var(--cor);font-size:15.5px;font-weight:500;text-align:left;
+  }
+  .bp-cat:hover{background:#f3f3f3;}
+  .bp-cat.ativa{background:var(--cor);color:#fff;}
+  .bp-cat:focus-visible{outline:2px solid var(--azul);outline-offset:-2px;}
+  .bp-cat-ico svg{display:block;width:20px;height:20px;}
+  .bp-flyout{--bp-fundo:#545454;position:relative;z-index:0;flex:1;min-width:0;overflow:auto;padding:0 16px 24px;background:var(--bp-fundo);}
+  .bp-fly-topo{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0 8px;background:var(--bp-fundo);}
+  .bp-fly-titulo{display:flex;align-items:center;gap:8px;color:#fff;font-size:20px;font-weight:700;}
+  .bp-fly-titulo svg{width:22px;height:22px;}
+  .bp-fechar{background:rgba(255,255,255,.14);color:#fff;padding:6px 10px;font-size:12px;}
+  .bp-fechar:hover{background:rgba(255,255,255,.26);}
+  .bp-destino{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:16px;color:#ddd;font-size:12.5px;}
+  .bp-destino select{width:auto;max-width:100%;padding:4px 8px;font-size:12.5px;background:#3f3f3f;color:#fff;border:1px solid #777;}
+  .bp-destino.ativo select{border-color:#ffd54f;box-shadow:0 0 0 1px #ffd54f;}
+  .bp-lista{display:flex;flex-direction:column;align-items:flex-start;gap:18px;}
+  .bp-item{display:flex;align-items:flex-start;gap:10px;}
+  .bp-item-peca{cursor:pointer;}
+  .bp-item-peca:hover{filter:brightness(1.12);}
+  .bp-mais{flex-shrink:0;width:28px;height:28px;margin-top:6px;padding:0;border-radius:50%;background:#fff;color:var(--azul);font-size:18px;font-weight:700;line-height:1;}
+  .bp-mais:hover{background:#e8f0fe;}
+  .bp-vazio{color:#ddd;font-size:13px;}
+
+  /* popup de ícones */
+  #popup-icone .popup-emoji-inner{width:100%;max-width:440px;}
+  .bp-grid-icones{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px;margin-top:10px;padding:8px;border-radius:8px;background:#1E90FF;}
+  .bp-ico-opcao{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px;border-radius:6px;background:rgba(0,0,0,.15);color:#fff;font-size:11px;font-weight:600;}
+  .bp-ico-opcao:hover{background:rgba(0,0,0,.3);}
+  .bp-ico-opcao.sel{outline:2px solid #fff;}
+  .bp-ico-opcao .bp-leds{grid-template-columns:repeat(5,8px);gap:2px;}
+  .bp-ico-opcao .bp-leds i{width:8px;height:8px;}
+
+  @media (max-width:640px){
+    .bp-paleta{height:440px;}
+    .bp-toolbox{width:124px;}
+    .bp-busca{margin:6px;padding:0 6px;}
+    .bp-cat{gap:6px;padding:9px 6px;border-left-width:6px;font-size:13px;}
+    .bp-cat-ico svg{width:16px;height:16px;}
+    .bp-flyout{padding:0 10px 16px;}
+    .bp-fly-titulo{font-size:17px;}
+  }
 </style>
 </head>
 <body>
@@ -302,6 +460,16 @@
   </div>
 </div>
 
+<div id="popup-icone" class="popup-emoji">
+  <div class="popup-emoji-inner">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <strong style="font-size:13px;">Escolher ícone</strong>
+      <button type="button" class="btn-secundario btn-mini" onclick="fecharSeletorIcone()">Fechar</button>
+    </div>
+    <div id="grid-icone" class="bp-grid-icones"></div>
+  </div>
+</div>
+
 <div id="popup-salvando" class="popup-salvando">
   <div class="popup-salvando-inner">
     <div class="spinner-salvando"></div>
@@ -317,8 +485,14 @@
    container (true = pode ter outros blocos dentro),
    params (lista de campos que aparecem ao adicionar o bloco),
    render(valores, filhosGerados) -> devolve o código do bloco.
+   partes (texto da peça visual, no estilo MakeCode): lista misturando
+     texto fixo ('mostrar número'), campo editável ({k:'chave do param'},
+     com mostrar:'valor' pra pílula exibir o valor em vez do rótulo) e
+     "bolinha" de outro bloco encaixado ({r:'texto' ou [partes], cor, hex}).
+   evento:true = bloco de evento (sem encaixe em cima/embaixo, fica solto).
+   cor = cor da peça, quando for diferente da cor da categoria.
    Pra adicionar um bloco novo no catálogo, é só copiar um exemplo
-   parecido e ajustar id/label/hint/params/render.
+   parecido e ajustar id/label/hint/partes/params/render.
 ================================================================ */
 
 function indent(texto, n){
@@ -362,158 +536,213 @@ var PINOS_TOQUE = [['P0','Pino 0'],['P1','Pino 1'],['P2','Pino 2']];
 
 var CATALOG = [
   {id:'mostrar_icone', categoria:'Básico', label:'Mostrar um ícone na tela', hint:'basic:mostrar ícone', container:false,
-    params:[{key:'icone', label:'Qual ícone', type:'select', options:ICONES}],
+    partes:['mostrar ícone', {k:'icone'}],
+    params:[{key:'icone', label:'Qual ícone', type:'select', visual:'icone', options:ICONES}],
     render:function(v){ return 'basic.showIcon(IconNames.'+v.icone+')'; }},
 
+  {id:'mostrar_leds', categoria:'Básico', label:'Mostrar um desenho personalizado na tela', hint:'basic:mostrar desenho', container:false,
+    partes:['mostrar leds', {k:'grade'}],
+    params:[{key:'grade', label:'Desenhe o padrão', type:'grade', def: [
+      [0,1,0,1,0],
+      [1,1,1,1,1],
+      [1,1,1,1,1],
+      [0,1,1,1,0],
+      [0,0,1,0,0]
+    ]}],
+    render:function(v){
+      var linhas = v.grade.map(function(linha){
+        return '    '+linha.map(function(c){ return c? '#':'.'; }).join(' ');
+      }).join('\n');
+      return 'basic.showLeds(`\n'+linhas+'\n    `)';
+    }},
+
   {id:'mostrar_texto', categoria:'Básico', label:'Mostrar um texto na tela (letra por letra)', hint:'basic:mostrar texto', container:false,
+    partes:['mostrar texto', {k:'texto'}],
     params:[{key:'texto', label:'Qual texto', type:'text', def:'Oi!'}],
     render:function(v){ return 'basic.showString("'+escJs(v.texto)+'")'; }},
 
   {id:'mostrar_numero', categoria:'Básico', label:'Mostrar um número na tela', hint:'basic:mostrar número', container:false,
+    partes:['mostrar número', {k:'numero'}],
     params:[{key:'numero', label:'Qual número', type:'number', def:1}],
     render:function(v){ return 'basic.showNumber('+v.numero+')'; }},
 
   {id:'limpar_tela', categoria:'Básico', label:'Apagar tudo que está na tela', hint:'basic:limpar tela', container:false,
+    partes:['limpar tela'],
     params:[],
     render:function(v){ return 'basic.clearScreen()'; }},
 
   {id:'pausar', categoria:'Básico', label:'Esperar um tempo (em milissegundos)', hint:'basic:pausar', container:false,
+    partes:['pausa (ms)', {k:'ms'}],
     params:[{key:'ms', label:'Quantos milissegundos (1000 = 1 segundo)', type:'number', def:1000}],
     render:function(v){ return 'basic.pause('+v.ms+')'; }},
 
   {id:'sempre', categoria:'Básico', label:'Repetir para sempre, sem parar', hint:'basic:sempre', container:true,
+    partes:['sempre'], evento:true,
     params:[],
     render:function(v,c){ return 'basic.forever(function () {\n'+indent(c,4)+'\n})'; }},
 
   {id:'ao_pressionar_botao', categoria:'Entrada', label:'Quando apertar um botão', hint:'input:ao pressionar botão', container:true,
+    partes:['ao pressionar', {k:'botao'}], evento:true,
     params:[{key:'botao', label:'Qual botão', type:'select', options:[['A','Botão A'],['B','Botão B'],['AB','Botões A + B juntos']]}],
     render:function(v,c){ return 'input.onButtonPressed(Button.'+v.botao+', function () {\n'+indent(c,4)+'\n})'; }},
 
   {id:'ao_mover', categoria:'Entrada', label:'Quando fizer um movimento com o micro:bit', hint:'input:ao mover', container:true,
+    partes:['ao mover:', {k:'gesto'}], evento:true,
     params:[{key:'gesto', label:'Qual movimento', type:'select', options:GESTOS}],
     render:function(v,c){ return 'input.onGesture(Gesture.'+v.gesto+', function () {\n'+indent(c,4)+'\n})'; }},
 
   {id:'ao_tocar_pino', categoria:'Entrada', label:'Quando tocar em um pino (com o dedo ou fio)', hint:'input:ao tocar no pino', container:true,
+    partes:['ao tocar no', {k:'pino'}], evento:true,
     params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}],
     render:function(v,c){ return 'input.onPinPressed(TouchPin.'+v.pino+', function () {\n'+indent(c,4)+'\n})'; }},
 
   {id:'tocar_tom', categoria:'Música', label:'Tocar uma nota musical', hint:'música:tocar tom', container:false,
+    partes:['tocar nota', {k:'nota'}, 'por', {k:'duracao'}],
     params:[{key:'nota', label:'Qual nota', type:'select', options:NOTAS}, {key:'duracao', label:'Por quanto tempo', type:'select', options:DURACOES}],
     render:function(v){ return 'music.playTone(Note.'+v.nota+', music.beat(BeatFraction.'+v.duracao+'))'; }},
 
   {id:'tocar_melodia', categoria:'Música', label:'Tocar uma melodia pronta', hint:'música:tocar melodia', container:false,
+    partes:['tocar melodia', {k:'melodia'}],
     params:[{key:'melodia', label:'Qual melodia', type:'select', options:MELODIAS}],
     render:function(v){ return 'music.startMelody(music.builtInMelody(Melodies.'+v.melodia+'), MelodyOptions.Once)'; }},
 
   {id:'descansar', categoria:'Música', label:'Fazer silêncio por um tempo (pausa musical)', hint:'música:descansar', container:false,
+    partes:['silêncio por', {k:'duracao'}],
     params:[{key:'duracao', label:'Por quanto tempo', type:'select', options:DURACOES}],
     render:function(v){ return 'music.rest(music.beat(BeatFraction.'+v.duracao+'))'; }},
 
   {id:'acender_ponto', categoria:'Tela de LEDs', label:'Acender um ponto específico da tela', hint:'led:acender ponto', container:false,
+    partes:['acender ponto x', {k:'x'}, 'y', {k:'y'}],
     params:[{key:'x', label:'Posição X (0 a 4, da esquerda pra direita)', type:'number', def:0}, {key:'y', label:'Posição Y (0 a 4, de cima pra baixo)', type:'number', def:0}],
     render:function(v){ return 'led.plot('+v.x+', '+v.y+')'; }},
 
   {id:'apagar_ponto', categoria:'Tela de LEDs', label:'Apagar um ponto específico da tela', hint:'led:apagar ponto', container:false,
+    partes:['apagar ponto x', {k:'x'}, 'y', {k:'y'}],
     params:[{key:'x', label:'Posição X (0 a 4)', type:'number', def:0}, {key:'y', label:'Posição Y (0 a 4)', type:'number', def:0}],
     render:function(v){ return 'led.unplot('+v.x+', '+v.y+')'; }},
 
   {id:'alternar_ponto', categoria:'Tela de LEDs', label:'Alternar um ponto (acende se tá apagado, apaga se tá aceso)', hint:'led:alternar ponto', container:false,
+    partes:['alternar ponto x', {k:'x'}, 'y', {k:'y'}],
     params:[{key:'x', label:'Posição X (0 a 4)', type:'number', def:0}, {key:'y', label:'Posição Y (0 a 4)', type:'number', def:0}],
     render:function(v){ return 'led.toggle('+v.x+', '+v.y+')'; }},
 
   {id:'repetir_x_vezes', categoria:'Repetição', label:'Repetir um número certo de vezes', hint:'loops:repetir', container:true,
+    partes:['repetir', {k:'vezes'}, 'vezes'],
     params:[{key:'vezes', label:'Quantas vezes repetir', type:'number', def:4}],
     render:function(v,c){ return 'for (let i = 0; i < '+v.vezes+'; i++) {\n'+indent(c,4)+'\n}'; }},
 
   {id:'escrever_digital', categoria:'Pinos', label:'Ligar ou desligar um pino (sinal digital)', hint:'pinos:escrever digital', container:false,
+    partes:['escrever digital no', {k:'pino'}, 'valor', {k:'valor'}],
     params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}, {key:'valor', label:'Ligado ou desligado', type:'select', options:[['1','Ligado (1)'],['0','Desligado (0)']]}],
     render:function(v){ return 'pins.digitalWritePin(DigitalPin.'+v.pino+', '+v.valor+')'; }},
 
   {id:'radio_enviar_numero', categoria:'Rádio', label:'Enviar um número pelo rádio pra outro micro:bit', hint:'rádio:enviar número', container:false,
+    partes:['rádio enviar número', {k:'numero'}],
     params:[{key:'numero', label:'Qual número enviar', type:'number', def:1}],
     render:function(v){ return 'radio.sendNumber('+v.numero+')'; }},
 
   {id:'radio_ao_receber_numero', categoria:'Rádio', label:'Quando receber um número pelo rádio', hint:'rádio:ao receber número', container:true,
+    partes:['ao receber pelo rádio', {r:'receivedNumber', cor:'#DC143C'}], evento:true,
     params:[],
     render:function(v,c){ return 'radio.onReceivedNumber(function (receivedNumber) {\n'+indent(c,4)+'\n})'; }},
 
   {id:'radio_definir_grupo', categoria:'Rádio', label:'Definir o grupo do rádio (só fala com quem está no mesmo grupo)', hint:'rádio:definir grupo', container:false,
+    partes:['rádio definir grupo', {k:'grupo'}],
     params:[{key:'grupo', label:'Número do grupo', type:'number', def:1}],
     render:function(v){ return 'radio.setGroup('+v.grupo+')'; }},
 
   {id:'radio_enviar_texto', categoria:'Rádio', label:'Enviar um texto pelo rádio', hint:'rádio:enviar texto', container:false,
+    partes:['rádio enviar texto', {k:'texto'}],
     params:[{key:'texto', label:'Qual texto', type:'text', def:'oi'}],
     render:function(v){ return 'radio.sendString("'+escJs(v.texto)+'")'; }},
 
   {id:'radio_ao_receber_texto', categoria:'Rádio', label:'Quando receber um texto pelo rádio', hint:'rádio:ao receber texto', container:true,
+    partes:['ao receber pelo rádio', {r:'receivedString', cor:'#DC143C'}], evento:true,
     params:[],
     render:function(v,c){ return 'radio.onReceivedString(function (receivedString) {\n'+indent(c,4)+'\n})'; }},
 
   {id:'definir_bpm', categoria:'Música', label:'Definir a velocidade da música (batidas por minuto)', hint:'música:definir bpm', container:false,
+    partes:['definir ritmo para', {k:'bpm'}, 'bpm'],
     params:[{key:'bpm', label:'Batidas por minuto', type:'number', def:120}],
     render:function(v){ return 'music.setTempo('+v.bpm+')'; }},
 
   {id:'tocar_frequencia', categoria:'Música', label:'Tocar um som numa frequência escolhida', hint:'música:tocar frequência', container:false,
+    partes:['tocar tom', {k:'freq'}, 'Hz por', {k:'duracao'}, 'ms'],
     params:[{key:'freq', label:'Frequência (Hz)', type:'number', def:440}, {key:'duracao', label:'Por quantos milissegundos', type:'number', def:500}],
     render:function(v){ return 'music.playTone('+v.freq+', '+v.duracao+')'; }},
 
   {id:'definir_brilho', categoria:'Tela de LEDs', label:'Definir o brilho da tela (0 a 255)', hint:'led:definir brilho', container:false,
+    partes:['definir brilho', {k:'brilho'}],
     params:[{key:'brilho', label:'Brilho (0 a 255)', type:'number', def:255}],
     render:function(v){ return 'led.setBrightness('+v.brilho+')'; }},
 
   {id:'escrever_analogico', categoria:'Pinos', label:'Definir a força de um sinal num pino (0 a 1023)', hint:'pinos:escrever analógico', container:false,
+    partes:['escrever analógico no', {k:'pino'}, 'valor', {k:'valor'}],
     params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}, {key:'valor', label:'Valor (0 a 1023)', type:'number', def:512}],
     render:function(v){ return 'pins.analogWritePin(AnalogPin.'+v.pino+', '+v.valor+')'; }},
 
   {id:'se_botao_pressionado_agora', categoria:'Lógica', label:'Se o botão estiver pressionado agora, então', hint:'lógica:se botão pressionado', container:true,
+    partes:['se', {r:['botão', {k:'botao'}, 'pressionado'], cor:'#D400D4', hex:true}, 'então'],
     params:[{key:'botao', label:'Qual botão', type:'select', options:[['A','Botão A'],['B','Botão B']]}],
     render:function(v,c){ return 'if (input.buttonIsPressed(Button.'+v.botao+')) {\n'+indent(c,4)+'\n}'; }},
 
   {id:'se_luz_comparar', categoria:'Lógica', label:'Se o nível de luz for maior/menor que um número, então', hint:'lógica:se luz', container:true,
+    partes:['se', {r:[{r:'nível de luz', cor:'#D400D4'}, {k:'comparador', mostrar:'valor'}, {k:'valor'}], cor:'#00A4A6', hex:true}, 'então'],
     params:[{key:'comparador', label:'Maior ou menor', type:'select', options:[['>','Maior que'],['<','Menor que']]}, {key:'valor', label:'Comparar com qual número (0 a 255)', type:'number', def:128}],
     render:function(v,c){ return 'if (input.lightLevel() '+v.comparador+' '+v.valor+') {\n'+indent(c,4)+'\n}'; }},
 
   {id:'se_temperatura_comparar', categoria:'Lógica', label:'Se a temperatura for maior/menor que um número, então', hint:'lógica:se temperatura', container:true,
+    partes:['se', {r:[{r:'temperatura (°C)', cor:'#D400D4'}, {k:'comparador', mostrar:'valor'}, {k:'valor'}], cor:'#00A4A6', hex:true}, 'então'],
     params:[{key:'comparador', label:'Maior ou menor', type:'select', options:[['>','Maior que'],['<','Menor que']]}, {key:'valor', label:'Comparar com quantos graus', type:'number', def:25}],
     render:function(v,c){ return 'if (input.temperature() '+v.comparador+' '+v.valor+') {\n'+indent(c,4)+'\n}'; }},
 
   {id:'se_som_comparar', categoria:'Lógica', label:'Se o nível de som for maior/menor que um número, então', hint:'lógica:se som', container:true,
+    partes:['se', {r:[{r:'nível de som', cor:'#D400D4'}, {k:'comparador', mostrar:'valor'}, {k:'valor'}], cor:'#00A4A6', hex:true}, 'então'],
     params:[{key:'comparador', label:'Maior ou menor', type:'select', options:[['>','Maior que'],['<','Menor que']]}, {key:'valor', label:'Comparar com qual número (0 a 255)', type:'number', def:128}],
     render:function(v,c){ return 'if (input.soundLevel() '+v.comparador+' '+v.valor+') {\n'+indent(c,4)+'\n}'; }},
 
   {id:'criar_variavel', categoria:'Variáveis', label:'Criar uma variável com um valor inicial', hint:'variável:criar', container:false,
+    partes:['criar variável', {k:'nome'}, 'com', {k:'valor'}],
     params:[{key:'nome', label:'Nome da variável', type:'text', def:'pontos'}, {key:'valor', label:'Valor inicial', type:'number', def:0}],
     render:function(v){ return 'let '+variavelJs(v.nome)+' = '+v.valor+';'; }},
 
   {id:'mudar_variavel', categoria:'Variáveis', label:'Somar um número numa variável', hint:'variável:mudar', container:false,
+    partes:['alterar', {k:'nome'}, 'por', {k:'quantidade'}],
     params:[{key:'nome', label:'Nome da variável', type:'text', def:'pontos'}, {key:'quantidade', label:'Somar quanto (pode ser negativo)', type:'number', def:1}],
     render:function(v){ return variavelJs(v.nome)+' += '+v.quantidade+';'; }},
 
   {id:'definir_variavel', categoria:'Variáveis', label:'Definir o valor de uma variável', hint:'variável:definir', container:false,
+    partes:['definir', {k:'nome'}, 'para', {k:'valor'}],
     params:[{key:'nome', label:'Nome da variável', type:'text', def:'pontos'}, {key:'valor', label:'Novo valor', type:'number', def:0}],
     render:function(v){ return variavelJs(v.nome)+' = '+v.valor+';'; }},
 
   {id:'mostrar_variavel', categoria:'Variáveis', label:'Mostrar o valor de uma variável na tela', hint:'variável:mostrar', container:false,
+    partes:['mostrar número', {k:'nome'}], cor:'#1E90FF',
     params:[{key:'nome', label:'Nome da variável', type:'text', def:'pontos'}],
     render:function(v){ return 'basic.showNumber('+variavelJs(v.nome)+')'; }},
 
   {id:'mostrar_temperatura', categoria:'Sensores', label:'Mostrar a temperatura na tela', hint:'sensores:temperatura', container:false,
+    partes:['mostrar número', {r:'temperatura (°C)', cor:'#D400D4'}], cor:'#1E90FF',
     params:[],
     render:function(v){ return 'basic.showNumber(input.temperature())'; }},
 
   {id:'mostrar_luz', categoria:'Sensores', label:'Mostrar o nível de luz na tela', hint:'sensores:luz', container:false,
+    partes:['mostrar número', {r:'nível de luz', cor:'#D400D4'}], cor:'#1E90FF',
     params:[],
     render:function(v){ return 'basic.showNumber(input.lightLevel())'; }},
 
   {id:'mostrar_som', categoria:'Sensores', label:'Mostrar o nível de som na tela', hint:'sensores:som', container:false,
+    partes:['mostrar número', {r:'nível de som', cor:'#D400D4'}], cor:'#1E90FF',
     params:[],
     render:function(v){ return 'basic.showNumber(input.soundLevel())'; }},
 
   {id:'mostrar_aceleracao', categoria:'Sensores', label:'Mostrar a força do movimento (aceleração) num eixo', hint:'sensores:aceleração', container:false,
+    partes:['mostrar número', {r:['aceleração (mg)', {k:'eixo'}], cor:'#D400D4'}], cor:'#1E90FF',
     params:[{key:'eixo', label:'Qual eixo', type:'select', options:[['X','X (lados)'],['Y','Y (frente/trás)'],['Z','Z (cima/baixo)']]}],
     render:function(v){ return 'basic.showNumber(input.acceleration(Dimension.'+v.eixo+'))'; }},
 
   {id:'mover_servo', categoria:'Pinos', label:'Mover um Servo Motor pra um ângulo', hint:'pinos:mover servo', container:false,
+    partes:['servo escrever no', {k:'pino'}, 'ângulo', {k:'angulo'}],
     params:[{key:'pino', label:'Qual pino', type:'select', options:PINOS_TOQUE}, {key:'angulo', label:'Ângulo (0 a 180)', type:'number', def:90}],
     render:function(v){ return 'pins.servoWritePin(AnalogPin.'+v.pino+', '+v.angulo+')'; }}
 ];
@@ -521,6 +750,63 @@ var CATALOG_MAP = {};
 CATALOG.forEach(function(c){ CATALOG_MAP[c.id] = c; });
 var CATEGORIAS = [];
 CATALOG.forEach(function(c){ if(CATEGORIAS.indexOf(c.categoria)===-1) CATEGORIAS.push(c.categoria); });
+
+/* ==================== VISUAL DAS CATEGORIAS E ÍCONES ====================
+   Cores oficiais do pxt-microbit (anotações //% color= em libs/core e
+   blockColors do pxtarget.json). "Sensores" não existe no MakeCode: esses
+   blocos lá são de Entrada, então usa a mesma cor.
+========================================================================== */
+var SVG_ICONE = {
+  basico:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="2" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><rect x="16" y="2" width="6" height="6" rx="1"/><rect x="2" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/><rect x="16" y="9" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="16" width="6" height="6" rx="1"/><rect x="16" y="16" width="6" height="6" rx="1"/></svg>',
+  entrada:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="12" cy="12" r="4.2" fill="currentColor"/></svg>',
+  sensores:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10 4a2 2 0 0 1 4 0v9.6a4.6 4.6 0 1 1-4 0z"/><circle cx="12" cy="17.3" r="1.9" fill="currentColor" stroke="none"/><path d="M12 9v7" stroke-linecap="round"/></svg>',
+  musica:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 14v-2a8 8 0 0 1 16 0v2" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="2.5" y="13" width="5.5" height="8.5" rx="1.6"/><rect x="16" y="13" width="5.5" height="8.5" rx="1.6"/></svg>',
+  led:'<svg viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M7.5 5.5h9a6.5 6.5 0 0 1 0 13h-9a6.5 6.5 0 0 1 0-13zM16.5 8.2a3.8 3.8 0 1 0 0 7.6a3.8 3.8 0 1 0 0-7.6z"/></svg>',
+  radio:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="1.5" y="17" width="3" height="5" rx=".6"/><rect x="6" y="13.5" width="3" height="8.5" rx=".6"/><rect x="10.5" y="10" width="3" height="12" rx=".6"/><rect x="15" y="6" width="3" height="16" rx=".6"/><rect x="19.5" y="2" width="3" height="20" rx=".6"/></svg>',
+  repeticao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M20.5 3.5v5.5h-5.5" stroke-linejoin="round"/></svg>',
+  logica:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 7h4l9.5 10h4.5M2.5 17h4l2.8-3M13.3 10l2.7-3h4.5"/><path d="M18.5 4l3 3-3 3M18.5 14l3 3-3 3"/></svg>',
+  variaveis:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="3.5" width="20" height="2.8" rx="1"/><rect x="2" y="8.5" width="20" height="2.8" rx="1"/><rect x="2" y="13.5" width="20" height="2.8" rx="1"/><rect x="2" y="18.5" width="20" height="2.8" rx="1"/></svg>',
+  pinos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5.3"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/></svg>',
+  busca:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>'
+};
+var CATEGORIA_INFO = {
+  'Básico':       {cor:'#1E90FF', icone:'basico'},
+  'Entrada':      {cor:'#D400D4', icone:'entrada'},
+  'Sensores':     {cor:'#D400D4', icone:'sensores'},
+  'Música':       {cor:'#E63022', icone:'musica'},
+  'Tela de LEDs': {cor:'#7600A8', icone:'led'},
+  'Rádio':        {cor:'#E3008C', icone:'radio'},
+  'Repetição':    {cor:'#00AA00', icone:'repeticao'},
+  'Lógica':       {cor:'#00A4A6', icone:'logica'},
+  'Variáveis':    {cor:'#DC143C', icone:'variaveis'},
+  'Pinos':        {cor:'#B22222', icone:'pinos'}
+};
+// ordem da caixa de ferramentas (igual ao MakeCode); categoria nova sem
+// entrada aqui aparece no fim, com cor cinza
+var CATEGORIAS_TOOLBOX = Object.keys(CATEGORIA_INFO).filter(function(c){ return CATEGORIAS.indexOf(c)!==-1; })
+  .concat(CATEGORIAS.filter(function(c){ return !CATEGORIA_INFO[c]; }));
+function corCategoria(cat){ return (CATEGORIA_INFO[cat]||{}).cor || '#5f6368'; }
+function corBloco(entry){ return entry.cor || corCategoria(entry.categoria); }
+function svgCategoria(cat){ return SVG_ICONE[(CATEGORIA_INFO[cat]||{}).icone] || SVG_ICONE.basico; }
+
+// Padrões de LED de cada IconNames, copiados de pxt-microbit/libs/core/icons.ts
+// (5 linhas de 5 pontos, 1 = aceso).
+var LEDS_ICONES = {
+  Heart:'01010,11111,11111,01110,00100', SmallHeart:'00000,01010,01110,00100,00000',
+  Yes:'00000,00001,00010,10100,01000', No:'10001,01010,00100,01010,10001',
+  Happy:'00000,01010,00000,10001,01110', Sad:'00000,01010,00000,01110,10001',
+  Confused:'00000,01010,00000,01010,10101', Angry:'10001,01010,00000,11111,10101',
+  Asleep:'00000,11011,00000,01110,00000', Surprised:'01010,00000,00100,01010,00100',
+  Silly:'10001,00000,11111,00011,00011', Fabulous:'11111,11011,00000,01010,01110',
+  Meh:'11011,00000,00010,00100,01000', TShirt:'11011,11111,01110,01110,01110',
+  Duck:'01100,11100,01111,01110,00000', House:'00100,01110,11111,01110,01010',
+  Butterfly:'11011,11111,00100,11111,11011', Ghost:'01110,10101,11111,11111,10101',
+  Umbrella:'01110,11111,00100,10100,11100', Target:'00100,01110,11011,01110,00100',
+  Diamond:'00100,01010,10001,01010,00100', Square:'11111,10001,10001,10001,11111',
+  Triangle:'00000,00100,01010,11111,00000', Rabbit:'10100,10100,11110,11010,11110',
+  Cow:'10001,10001,11111,01110,00100', Giraffe:'11000,01000,01000,01110,01010',
+  Snake:'11000,11011,01010,01110,00000', Skull:'01110,10101,11111,01110,01110'
+};
 
 /* ==================== ESTADO ==================== */
 function visualPadrao(){
@@ -533,6 +819,16 @@ var state = {
 };
 var uid = 1;
 function novoId(prefixo){ return prefixo+(uid++); }
+// depois de carregar um estado salvo, continua a contagem a partir do maior
+// id que já existe (senão o próximo passo/bloco novo repete um id antigo)
+function sincronizarUid(){
+  var max = 0;
+  function ver(id){ var n = parseInt(String(id).replace(/\D/g,''), 10); if(n>max) max = n; }
+  state.passos.forEach(function(p){ ver(p.id); p.blocos.forEach(function(b){ ver(b.id); }); });
+  if(uid<=max) uid = max+1;
+}
+// cópia profunda: o valor do tipo 'grade' é uma matriz, não pode ser compartilhado entre blocos
+function copiarValores(v){ return JSON.parse(JSON.stringify(v||{})); }
 function onVisualChange(campo, valor){
   state.visual[campo] = valor;
   salvarRascunho();
@@ -649,6 +945,7 @@ function carregarRascunho(){
   }catch(e){}
   if(!state.visual) state.visual = visualPadrao();
   if(state.pasta==null) state.pasta = '';
+  sincronizarUid();
 }
 
 /* ==================== GERAÇÃO DO MARKDOWN ==================== */
@@ -752,7 +1049,7 @@ function duplicarBlocosDoAnterior(passoId){
   var anterior = state.passos[i-1];
   var mapaIds = {};
   var copiados = anterior.blocos.map(function(b){
-    var novo = {id:novoId('b'), catalogId:b.catalogId, dentroDe:null, values:Object.assign({}, b.values)};
+    var novo = {id:novoId('b'), catalogId:b.catalogId, dentroDe:null, values:copiarValores(b.values)};
     mapaIds[b.id] = novo.id;
     return novo;
   });
@@ -780,12 +1077,21 @@ function inserirHintNoTexto(passoId, hint){
 }
 
 /* ==================== BLOCOS ==================== */
-function abrirFormAddBloco(passoId){
-  var primeiraCategoria = CATEGORIAS[0];
-  var primeiroBloco = CATALOG.filter(function(c){return c.categoria===primeiraCategoria;})[0];
-  uiAddBloco[passoId] = {catalogId:primeiroBloco.id, values:valoresPadrao(primeiroBloco), dentroDe:'', editandoBlocoId:null};
+// Paleta de blocos (caixa de ferramentas estilo MakeCode). Clicar numa peça
+// (ou no "+") já adiciona o bloco ao passo, com os valores padrão; a edição
+// dos campos acontece direto na peça que ficou no passo.
+function abrirPaletaEm(passoId, dentroDeId){
+  var atual = uiAddBloco[passoId];
+  uiAddBloco[passoId] = {
+    categoria: atual ? atual.categoria : CATEGORIAS_TOOLBOX[0],
+    busca: atual ? atual.busca : '',
+    dentroDe: dentroDeId || ''
+  };
   render();
+  var el = document.getElementById('bp-pal-'+passoId);
+  if(el && el.scrollIntoView) el.scrollIntoView({block:'nearest', behavior:'smooth'});
 }
+function abrirFormAddBloco(passoId){ abrirPaletaEm(passoId, ''); }
 function fecharFormAddBloco(passoId){
   delete uiAddBloco[passoId];
   render();
@@ -794,63 +1100,132 @@ function valoresPadrao(entry){
   var v = {};
   entry.params.forEach(function(p){
     if(p.type==='select') v[p.key] = p.options[0][0];
+    else if(p.type==='grade') v[p.key] = copiarValores(p.def);
     else v[p.key] = (p.def!==undefined? p.def : '');
   });
   return v;
 }
-function onTrocaCategoriaBloco(passoId, categoria){
-  var primeiro = CATALOG.filter(function(c){return c.categoria===categoria;})[0];
-  uiAddBloco[passoId].catalogId = primeiro.id;
-  uiAddBloco[passoId].values = valoresPadrao(primeiro);
-  render();
-}
-function onTrocaTipoBloco(passoId, catalogId){
-  var entry = CATALOG_MAP[catalogId];
-  uiAddBloco[passoId].catalogId = catalogId;
-  uiAddBloco[passoId].values = valoresPadrao(entry);
-  render();
-}
-function onMudaParamBloco(passoId, chave, valor){
-  uiAddBloco[passoId].values[chave] = valor;
-}
 function onMudaDentroDe(passoId, valor){
   uiAddBloco[passoId].dentroDe = valor;
+  var el = document.getElementById('bp-destino-'+passoId);
+  if(el) el.classList.toggle('ativo', !!valor);
 }
-function salvarBlocoDoForm(passoId){
+function bpCategoria(passoId, categoria){
+  uiAddBloco[passoId].categoria = categoria;
+  uiAddBloco[passoId].busca = '';
+  render();
+  var fly = document.getElementById('bp-fly-'+passoId);
+  if(fly) fly.scrollTop = 0;
+}
+// a busca só redesenha a área dos blocos, pra não perder o foco do campo
+function bpBuscar(passoId, valor){
   var ui = uiAddBloco[passoId];
+  ui.busca = valor;
   var passo = state.passos.find(function(p){ return p.id===passoId; });
-  if(ui.editandoBlocoId){
-    var b = passo.blocos.find(function(b){ return b.id===ui.editandoBlocoId; });
-    b.catalogId = ui.catalogId;
-    b.values = Object.assign({}, ui.values);
-    b.dentroDe = ui.dentroDe || null;
-  } else {
-    passo.blocos.push({id:novoId('b'), catalogId:ui.catalogId, values:Object.assign({}, ui.values), dentroDe: ui.dentroDe || null});
-  }
-  delete uiAddBloco[passoId];
+  var fly = document.getElementById('bp-fly-'+passoId);
+  if(fly){ fly.innerHTML = htmlFlyout(passo); fly.scrollTop = 0; }
+  var buscando = !!valor.trim();
+  document.querySelectorAll('#bp-pal-'+passoId+' .bp-cat').forEach(function(el){
+    el.classList.toggle('ativa', !buscando && el.getAttribute('data-cat')===ui.categoria);
+  });
+}
+var ultimoBlocoAdicionado = null;
+function adicionarBlocoDaPaleta(passoId, catalogId){
+  var ui = uiAddBloco[passoId];
+  var entry = CATALOG_MAP[catalogId];
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  // bloco de evento (sempre, ao pressionar...) não vai dentro de outro bloco no MakeCode
+  var dentro = entry.evento ? null : ((ui && ui.dentroDe) || null);
+  var novo = {id:novoId('b'), catalogId:catalogId, values:valoresPadrao(entry), dentroDe:dentro};
+  passo.blocos.push(novo);
+  ultimoBlocoAdicionado = novo.id;
   salvarRascunho();
   render();
 }
-function editarBloco(passoId, blocoId){
+function acharBloco(passoId, blocoId){
   var passo = state.passos.find(function(p){ return p.id===passoId; });
-  var b = passo.blocos.find(function(b){ return b.id===blocoId; });
-  uiAddBloco[passoId] = {catalogId:b.catalogId, values:Object.assign({}, b.values), dentroDe:b.dentroDe||'', editandoBlocoId:b.id};
+  return passo.blocos.find(function(b){ return b.id===blocoId; });
+}
+// campo de número/texto: só guarda, sem redesenhar (senão perde o foco a cada tecla)
+function onMudaValorBloco(passoId, blocoId, chave, valor, el){
+  acharBloco(passoId, blocoId).values[chave] = valor;
+  if(el) el.style.width = larguraCampo(valor);
+  salvarRascunho();
+}
+function onMudaSelectBloco(passoId, blocoId, chave, valor){
+  acharBloco(passoId, blocoId).values[chave] = valor;
+  salvarRascunho();
   render();
+}
+function bpAlternaLed(passoId, blocoId, chave, linha, coluna, el){
+  var grade = acharBloco(passoId, blocoId).values[chave];
+  grade[linha][coluna] = grade[linha][coluna] ? 0 : 1;
+  el.classList.toggle('on', !!grade[linha][coluna]);
+  el.setAttribute('aria-pressed', grade[linha][coluna] ? 'true' : 'false');
+  salvarRascunho();
+}
+// trocar o encaixe de um bloco que já está no passo; ele vira o último do lugar novo
+function onMudaDentroDeBloco(passoId, blocoId, valor){
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  var i = passo.blocos.findIndex(function(b){ return b.id===blocoId; });
+  var b = passo.blocos[i];
+  b.dentroDe = valor || null;
+  passo.blocos.splice(i, 1);
+  passo.blocos.push(b);
+  salvarRascunho();
+  render();
+}
+function descendentes(passo, blocoId){
+  var achados = {};
+  (function descer(id){
+    passo.blocos.forEach(function(b){
+      if(b.dentroDe===id && !achados[b.id]){ achados[b.id] = true; descer(b.id); }
+    });
+  })(blocoId);
+  return achados;
+}
+
+/* ---------- seletor de ícone (popup) ---------- */
+var seletorIconeAlvo = null;
+function abrirSeletorIcone(passoId, blocoId, chave){
+  seletorIconeAlvo = {passoId:passoId, blocoId:blocoId, chave:chave};
+  var atual = acharBloco(passoId, blocoId).values[chave];
+  document.getElementById('grid-icone').innerHTML = ICONES.map(function(o){
+    return '<button type="button" class="bp-ico-opcao'+(o[0]===atual?' sel':'')+'" onclick="escolherIcone(\''+o[0]+'\')">'
+      + htmlMiniLeds(o[0]) + '<span>'+escapeHtml(o[1])+'</span></button>';
+  }).join('');
+  document.getElementById('popup-icone').classList.add('aberto');
+}
+function escolherIcone(nome){
+  if(!seletorIconeAlvo) return;
+  acharBloco(seletorIconeAlvo.passoId, seletorIconeAlvo.blocoId).values[seletorIconeAlvo.chave] = nome;
+  fecharSeletorIcone();
+  salvarRascunho();
+  render();
+}
+function fecharSeletorIcone(){
+  document.getElementById('popup-icone').classList.remove('aberto');
+  seletorIconeAlvo = null;
 }
 function removerBloco(passoId, blocoId){
   var passo = state.passos.find(function(p){ return p.id===passoId; });
   // reencaixa os filhos desse bloco no nível de cima, em vez de apagar junto
-  passo.blocos.forEach(function(b){ if(b.dentroDe===blocoId) b.dentroDe=null; });
+  var removido = passo.blocos.find(function(b){ return b.id===blocoId; });
+  passo.blocos.forEach(function(b){ if(b.dentroDe===blocoId) b.dentroDe = removido.dentroDe || null; });
   passo.blocos = passo.blocos.filter(function(b){ return b.id!==blocoId; });
   salvarRascunho();
   render();
 }
+// sobe/desce entre os blocos do mesmo lugar (mesmo "dentroDe"), que é a ordem
+// que aparece na peça e no código gerado
 function moverBloco(passoId, blocoId, direcao){
   var passo = state.passos.find(function(p){ return p.id===passoId; });
-  var i = passo.blocos.findIndex(function(b){ return b.id===blocoId; });
-  var j = i+direcao;
-  if(j<0 || j>=passo.blocos.length) return;
-  var tmp = passo.blocos[i]; passo.blocos[i]=passo.blocos[j]; passo.blocos[j]=tmp;
+  var b = passo.blocos.find(function(x){ return x.id===blocoId; });
+  var irmaos = passo.blocos.filter(function(x){ return (x.dentroDe||null)===(b.dentroDe||null); });
+  var outro = irmaos[irmaos.indexOf(b)+direcao];
+  if(!outro) return;
+  var i = passo.blocos.indexOf(b), j = passo.blocos.indexOf(outro);
+  passo.blocos[i] = outro; passo.blocos[j] = b;
   salvarRascunho();
   render();
 }
@@ -858,6 +1233,7 @@ function resumoBloco(b){
   var entry = CATALOG_MAP[b.catalogId];
   var partes = entry.params.map(function(p){
     var val = b.values[p.key];
+    if(p.type==='grade') return 'desenho personalizado';
     if(p.type==='select'){
       var achou = p.options.find(function(o){return o[0]===val;});
       return achou? achou[1] : val;
@@ -899,77 +1275,234 @@ function renderListaPassos(){
       html += '</div>';
     }
 
-    html += '<div>';
-    passo.blocos.forEach(function(b){
-      var entry = CATALOG_MAP[b.catalogId];
-      html += '<div class="bloco-item"><div class="info">'+escapeHtml(resumoBloco(b));
-      if(entry.container) html += ' <span class="tag-container">(pode ter blocos dentro)</span>';
-      if(b.dentroDe){
-        var pai = passo.blocos.find(function(x){return x.id===b.dentroDe;});
-        if(pai) html += '<br><span class="dentro-de">encaixado dentro de: '+escapeHtml(resumoBloco(pai))+'</span>';
-      }
-      html += '</div><div class="acoes">';
-      html += '<button class="btn-secundario btn-mini" onclick="moverBloco(\''+passo.id+'\',\''+b.id+'\',-1)">▲</button>';
-      html += '<button class="btn-secundario btn-mini" onclick="moverBloco(\''+passo.id+'\',\''+b.id+'\',1)">▼</button>';
-      html += '<button class="btn-secundario btn-mini" onclick="editarBloco(\''+passo.id+'\',\''+b.id+'\')">editar</button>';
-      html += '<button class="btn-perigo btn-mini" onclick="removerBloco(\''+passo.id+'\',\''+b.id+'\')">remover</button>';
-      html += '</div></div>';
-    });
-    html += '</div>';
+    var ui = uiAddBloco[passo.id];
+    if(ui && ui.dentroDe && !passo.blocos.some(function(b){ return b.id===ui.dentroDe; })) ui.dentroDe = '';
 
-    if(uiAddBloco[passo.id]){
-      html += renderFormAddBloco(passo);
-    } else {
-      html += '<div style="margin-top:10px;"><button class="btn-secundario btn-mini" onclick="abrirFormAddBloco(\''+passo.id+'\')">+ Adicionar bloco</button></div>';
-    }
+    html += '<div class="bp-area">';
+    html += '<div class="bp-ws">';
+    if(!passo.blocos.length) html += '<p class="bp-ws-vazio">Nenhum bloco neste passo ainda.</p>';
+    html += htmlInstancias(passo, null);
+    if(!ui) html += '<div class="bp-ws-rodape"><button class="btn-secundario btn-mini" onclick="abrirFormAddBloco(\''+passo.id+'\')">+ Adicionar bloco</button></div>';
+    html += '</div>';
+    if(ui) html += renderPaleta(passo);
+    html += '</div>';
 
     html += '</div>';
   });
+  // guarda a rolagem das paletas abertas, pra não voltar pro topo a cada clique
+  var rolagens = {};
+  document.querySelectorAll('#lista-passos [data-bp-rolagem]').forEach(function(el){ rolagens[el.id] = el.scrollTop; });
   document.getElementById('lista-passos').innerHTML = html;
+  Object.keys(rolagens).forEach(function(id){ var el = document.getElementById(id); if(el) el.scrollTop = rolagens[id]; });
+  ultimoBlocoAdicionado = null;
 }
 
-function renderFormAddBloco(passo){
-  var ui = uiAddBloco[passo.id];
-  var entry = CATALOG_MAP[ui.catalogId];
-  var html = '<div class="form-add-bloco">';
-  html += '<h3>'+(ui.editandoBlocoId? 'Editar bloco' : 'Adicionar bloco')+'</h3>';
-
-  html += '<label>Categoria</label><select onchange="onTrocaCategoriaBloco(\''+passo.id+'\', this.value)">';
-  CATEGORIAS.forEach(function(cat){ html += opt(cat, cat, entry.categoria); });
-  html += '</select>';
-
-  html += '<label>Bloco</label><select onchange="onTrocaTipoBloco(\''+passo.id+'\', this.value)">';
-  CATALOG.filter(function(c){return c.categoria===entry.categoria;}).forEach(function(c){
-    html += opt(c.id, c.label, entry.id);
-  });
-  html += '</select>';
-
-  entry.params.forEach(function(p){
-    html += '<label>'+escapeHtml(p.label)+'</label>';
-    if(p.type==='select'){
-      html += '<select onchange="onMudaParamBloco(\''+passo.id+'\',\''+p.key+'\', this.value)">';
-      p.options.forEach(function(o){ html += opt(o[0], o[1], ui.values[p.key]); });
-      html += '</select>';
-    } else if(p.type==='number'){
-      html += '<input type="number" value="'+escapeHtml(ui.values[p.key])+'" oninput="onMudaParamBloco(\''+passo.id+'\',\''+p.key+'\', this.value)">';
-    } else {
-      html += '<input type="text" value="'+escapeHtml(ui.values[p.key])+'" oninput="onMudaParamBloco(\''+passo.id+'\',\''+p.key+'\', this.value)">';
+/* ==================== PEÇAS VISUAIS (estilo MakeCode) ==================== */
+function paramDe(entry, chave){
+  return entry.params.find(function(p){ return p.key===chave; });
+}
+function larguraCampo(valor){
+  return (Math.max(String(valor==null?'':valor).length, 1)+1)+'ch';
+}
+function htmlMiniLeds(nomeIcone){
+  var padrao = LEDS_ICONES[nomeIcone];
+  // sem o padrão oficial, mostra o nome em vez de inventar um desenho
+  if(!padrao) return '<span class="bp-txt">'+escapeHtml(nomeIcone)+'</span>';
+  return '<span class="bp-leds" aria-hidden="true">'+padrao.replace(/,/g,'').split('').map(function(c){
+    return '<i'+(c==='1'?' class="on"':'')+'></i>';
+  }).join('')+'</span>';
+}
+// ctx.modo: 'paleta' (prévia estática, valores padrão) ou 'inst' (bloco no passo, editável)
+function htmlPartes(partes, entry, valores, ctx){
+  return partes.map(function(pt){
+    if(typeof pt==='string') return '<span class="bp-txt">'+escapeHtml(pt)+'</span>';
+    if(pt.k) return htmlCampo(paramDe(entry, pt.k), pt, valores[pt.k], ctx);
+    if(pt.r!==undefined){
+      var miolo = Array.isArray(pt.r) ? htmlPartes(pt.r, entry, valores, ctx) : '<span class="bp-txt">'+escapeHtml(pt.r)+'</span>';
+      return '<span class="bp-rep'+(pt.hex?' bp-hex':'')+'" style="--cor:'+pt.cor+'">'+miolo+'</span>';
     }
-  });
+    return '';
+  }).join('');
+}
+function htmlCampo(p, pt, valor, ctx){
+  var editavel = ctx.modo==='inst';
+  var args = editavel ? '\''+ctx.passoId+'\',\''+ctx.blocoId+'\',\''+p.key+'\'' : '';
+  var h;
+  if(p.type==='grade'){
+    h = '<span class="bp-grade" role="group" aria-label="'+escapeHtml(p.label)+'">';
+    valor.forEach(function(linha, i){
+      linha.forEach(function(c, j){
+        if(editavel) h += '<button type="button" class="bp-led'+(c?' on':'')+'" aria-pressed="'+(c?'true':'false')+'" aria-label="linha '+(i+1)+', coluna '+(j+1)+'" onclick="bpAlternaLed('+args+','+i+','+j+', this)"></button>';
+        else h += '<span class="bp-led'+(c?' on':'')+'"></span>';
+      });
+    });
+    return h+'</span>';
+  }
+  if(p.type==='select' && p.visual==='icone'){
+    h = htmlMiniLeds(valor)+'<span class="bp-seta">▾</span>';
+    if(!editavel) return '<span class="bp-ico">'+h+'</span>';
+    return '<button type="button" class="bp-ico" title="Trocar ícone" aria-label="Trocar ícone" onclick="abrirSeletorIcone('+args+')">'+h+'</button>';
+  }
+  if(p.type==='select'){
+    var op = p.options.find(function(o){ return o[0]===valor; }) || p.options[0];
+    h = '<span class="bp-drop"><span>'+escapeHtml(pt.mostrar==='valor' ? op[0] : op[1])+'</span><span class="bp-seta">▾</span>';
+    if(editavel){
+      h += '<select aria-label="'+escapeHtml(p.label)+'" title="'+escapeHtml(p.label)+'" onchange="onMudaSelectBloco('+args+', this.value)">';
+      p.options.forEach(function(o){ h += opt(o[0], o[1], valor); });
+      h += '</select>';
+    }
+    return h+'</span>';
+  }
+  // number / text (nome de variável vira a pílula vermelha de variável do MakeCode)
+  var ehVariavel = p.key==='nome';
+  var ehTexto = p.type==='text' && !ehVariavel;
+  var cls = 'bp-oval'+(ehVariavel?' bp-var':'');
+  var aspasA = ehTexto ? '<span class="bp-aspas">“</span>' : '';
+  var aspasF = ehTexto ? '<span class="bp-aspas">”</span>' : '';
+  if(!editavel) return '<span class="'+cls+'">'+aspasA+'<span>'+escapeHtml(valor)+'</span>'+aspasF+'</span>';
+  return '<span class="'+cls+'">'+aspasA
+    + '<input type="'+(p.type==='number'?'number':'text')+'" value="'+escapeHtml(valor)+'" style="width:'+larguraCampo(valor)+'" aria-label="'+escapeHtml(p.label)+'" title="'+escapeHtml(p.label)+'" oninput="onMudaValorBloco('+args+', this.value, this)">'
+    + aspasF+'</span>';
+}
+function htmlPeca(entry, valores, ctx, miolo){
+  var estilo = ' style="--cor:'+corBloco(entry)+'"';
+  var campos = htmlPartes(entry.partes, entry, valores, ctx) + (ctx.acoes||'');
+  var evento = entry.evento ? ' bp-evento' : '';
+  if(!entry.container) return '<div class="bp-peca bp-barra'+evento+'"'+estilo+'>'+campos+'</div>';
+  return '<div class="bp-c'+evento+'"'+estilo+'>'
+    + '<div class="bp-c-topo bp-barra">'+campos+'</div>'
+    + '<div class="bp-c-boca">'+(miolo||'')+'</div>'
+    + '<div class="bp-c-base"></div></div>';
+}
+// texto corrido da peça (pra listas de "encaixar em" e pra busca)
+function textoPartes(partes, entry, valores){
+  return partes.map(function(pt){
+    if(typeof pt==='string') return pt;
+    if(pt.k){
+      var p = paramDe(entry, pt.k), v = valores[pt.k];
+      if(p.type==='grade') return '[desenho]';
+      if(p.type==='select'){
+        var o = p.options.find(function(o){ return o[0]===v; });
+        return o ? (pt.mostrar==='valor' ? o[0] : o[1]) : v;
+      }
+      if(p.type==='text' && p.key!=='nome') return '"'+v+'"';
+      return String(v);
+    }
+    if(pt.r!==undefined) return '('+(Array.isArray(pt.r) ? textoPartes(pt.r, entry, valores) : pt.r)+')';
+    return '';
+  }).join(' ');
+}
+function textoPeca(b){
+  var entry = CATALOG_MAP[b.catalogId];
+  return textoPartes(entry.partes, entry, b.values);
+}
+// blocos que aceitam outros dentro, na ordem em que aparecem (com recuo pros aninhados)
+function containersEmOrdem(passo){
+  var lista = [];
+  (function descer(paiId, nivel){
+    passo.blocos.forEach(function(b){
+      if((b.dentroDe||null)!==paiId || !CATALOG_MAP[b.catalogId].container) return;
+      lista.push({b:b, recuo: nivel ? '  '.repeat(nivel)+'↳ ' : ''});
+      descer(b.id, nivel+1);
+    });
+  })(null, 0);
+  return lista;
+}
 
-  var candidatosContainer = passo.blocos.filter(function(b){
-    return CATALOG_MAP[b.catalogId].container && b.id!==ui.editandoBlocoId;
-  });
-  html += '<label>Encaixar dentro de outro bloco?</label><select onchange="onMudaDentroDe(\''+passo.id+'\', this.value)">';
-  html += opt('', 'Não, deixa solto', ui.dentroDe||'');
-  candidatosContainer.forEach(function(c){ html += opt(c.id, resumoBloco(c), ui.dentroDe||''); });
-  html += '</select>';
+/* ---------- blocos já colocados no passo ---------- */
+function htmlInstancias(passo, paiId){
+  return passo.blocos.filter(function(b){ return (b.dentroDe||null)===paiId; })
+    .map(function(b){ return htmlInstancia(passo, b); }).join('');
+}
+function htmlInstancia(passo, b){
+  var entry = CATALOG_MAP[b.catalogId];
+  var ctx = {modo:'inst', passoId:passo.id, blocoId:b.id, acoes:htmlAcoesBloco(passo, b)};
+  var miolo = '';
+  if(entry.container){
+    miolo = htmlInstancias(passo, b.id)
+      + '<button type="button" class="bp-aqui" onclick="abrirPaletaEm(\''+passo.id+'\',\''+b.id+'\')">+ colocar bloco aqui</button>';
+  }
+  return '<div class="bp-inst'+(entry.evento?' bp-inst-evento':'')+(b.id===ultimoBlocoAdicionado?' bp-novo':'')+'" title="'+escapeHtml(resumoBloco(b))+'">'
+    + htmlPeca(entry, b.values, ctx, miolo) + '</div>';
+}
+function htmlAcoesBloco(passo, b){
+  var args = '\''+passo.id+'\',\''+b.id+'\'';
+  var entry = CATALOG_MAP[b.catalogId];
+  // não deixa encaixar um bloco dentro dele mesmo nem dentro de um filho dele
+  var proibidos = descendentes(passo, b.id); proibidos[b.id] = true;
+  var h = '<span class="bp-acoes">';
+  h += '<button type="button" title="Subir" aria-label="Subir bloco" onclick="moverBloco('+args+',-1)">▲</button>';
+  h += '<button type="button" title="Descer" aria-label="Descer bloco" onclick="moverBloco('+args+',1)">▼</button>';
+  if(!entry.evento){
+    h += '<span class="bp-acao-sel" title="Encaixar dentro de outro bloco">⤵<select aria-label="Encaixar dentro de outro bloco" onchange="onMudaDentroDeBloco('+args+', this.value)">';
+    h += opt('', 'Solto no passo (fora de outro bloco)', b.dentroDe||'');
+    containersEmOrdem(passo).forEach(function(c){
+      if(!proibidos[c.b.id]) h += opt(c.b.id, c.recuo+'dentro de: '+textoPeca(c.b), b.dentroDe||'');
+    });
+    h += '</select></span>';
+  }
+  h += '<button type="button" class="bp-acao-x" title="Remover" aria-label="Remover bloco" onclick="removerBloco('+args+')">✕</button>';
+  return h+'</span>';
+}
 
-  html += '<div class="acoes" style="margin-top:10px;">';
-  html += '<button class="btn-principal btn-mini" onclick="salvarBlocoDoForm(\''+passo.id+'\')">'+(ui.editandoBlocoId?'Salvar alterações':'Adicionar')+'</button>';
-  html += '<button class="btn-secundario btn-mini" onclick="fecharFormAddBloco(\''+passo.id+'\')">Cancelar</button>';
-  html += '</div></div>';
-  return html;
+/* ---------- paleta (caixa de ferramentas + blocos da categoria) ---------- */
+function normalizarBusca(s){
+  return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+}
+function textoBusca(entry){
+  if(!entry._busca) entry._busca = normalizarBusca([entry.label, entry.hint, entry.categoria, textoPartes(entry.partes, entry, valoresPadrao(entry))].join(' '));
+  return entry._busca;
+}
+function renderPaleta(passo){
+  var ui = uiAddBloco[passo.id];
+  var pid = '\''+passo.id+'\'';
+  var buscando = !!(ui.busca||'').trim();
+  var h = '<div class="bp-paleta" id="bp-pal-'+passo.id+'">';
+  h += '<div class="bp-toolbox">';
+  h += '<div class="bp-busca"><input type="text" placeholder="Pesquisar..." aria-label="Pesquisar blocos" value="'+escapeHtml(ui.busca||'')+'" oninput="bpBuscar('+pid+', this.value)">'+SVG_ICONE.busca+'</div>';
+  h += '<div class="bp-cats" id="bp-cats-'+passo.id+'" data-bp-rolagem>';
+  CATEGORIAS_TOOLBOX.forEach(function(cat){
+    var ativa = !buscando && cat===ui.categoria;
+    h += '<button type="button" class="bp-cat'+(ativa?' ativa':'')+'" data-cat="'+escapeHtml(cat)+'" style="--cor:'+corCategoria(cat)+'" onclick="bpCategoria('+pid+','+escapeHtml(JSON.stringify(cat))+')">'
+      + '<span class="bp-cat-ico">'+svgCategoria(cat)+'</span><span>'+escapeHtml(cat)+'</span></button>';
+  });
+  h += '</div></div>';
+  h += '<div class="bp-flyout" id="bp-fly-'+passo.id+'" data-bp-rolagem>'+htmlFlyout(passo)+'</div>';
+  return h+'</div>';
+}
+function htmlFlyout(passo){
+  var ui = uiAddBloco[passo.id];
+  var pid = '\''+passo.id+'\'';
+  var busca = (ui.busca||'').trim();
+  var lista;
+  var h = '<div class="bp-fly-topo">';
+  if(busca){
+    var termo = normalizarBusca(busca);
+    lista = CATALOG.filter(function(e){ return textoBusca(e).indexOf(termo)!==-1; });
+    h += '<span class="bp-fly-titulo">'+SVG_ICONE.busca+'Resultados</span>';
+  } else {
+    lista = CATALOG.filter(function(e){ return e.categoria===ui.categoria; });
+    h += '<span class="bp-fly-titulo">'+svgCategoria(ui.categoria)+escapeHtml(ui.categoria)+'</span>';
+  }
+  h += '<button type="button" class="bp-fechar" onclick="fecharFormAddBloco('+pid+')">Fechar ✕</button></div>';
+
+  h += '<div class="bp-destino'+(ui.dentroDe?' ativo':'')+'" id="bp-destino-'+passo.id+'"><span>Adicionar em:</span>';
+  h += '<select aria-label="Onde o bloco novo vai entrar" onchange="onMudaDentroDe('+pid+', this.value)">';
+  h += opt('', 'solto no passo', ui.dentroDe||'');
+  containersEmOrdem(passo).forEach(function(c){ h += opt(c.b.id, c.recuo+'dentro de: '+textoPeca(c.b), ui.dentroDe||''); });
+  h += '</select></div>';
+
+  if(!lista.length) h += '<p class="bp-vazio">Nenhum bloco encontrado pra “'+escapeHtml(busca)+'”.</p>';
+  h += '<div class="bp-lista">';
+  lista.forEach(function(entry){
+    var add = 'adicionarBlocoDaPaleta('+pid+',\''+entry.id+'\')';
+    h += '<div class="bp-item">';
+    h += '<div class="bp-item-peca" title="'+escapeHtml(entry.label)+'" onclick="'+add+'">'+htmlPeca(entry, valoresPadrao(entry), {modo:'paleta'}, '')+'</div>';
+    h += '<button type="button" class="bp-mais" title="Adicionar ao passo" aria-label="Adicionar: '+escapeHtml(entry.label)+'" onclick="'+add+'">+</button>';
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
 }
 
 /* ==================== CONFIG / TOKEN GITHUB ==================== */
@@ -1150,6 +1683,7 @@ async function editarAulaExistente(pasta, arquivoNome){
     novoEstado.pasta = pasta;
     novoEstado.arquivoNome = arquivoNome;
     state = novoEstado;
+    sincronizarUid();
     arquivoNomeEditadoManual = true;
     document.getElementById('titulo-tela-editor').textContent = 'Editando: '+state.aulaNome;
     mostrarTela('editor');
