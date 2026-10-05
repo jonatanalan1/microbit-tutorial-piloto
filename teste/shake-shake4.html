@@ -57,9 +57,9 @@
   body{ background:var(--bg); color:var(--text); }
 
   .app{
-    max-width: 1180px;
+    width:100%;
     margin: 0 auto;
-    padding: 20px 16px;
+    padding: 12px 16px;
     height:100%;
     min-height:0;
     display:flex;
@@ -166,6 +166,12 @@
     padding:8px 16px;
     font-size:.85rem;
   }
+  .editor-topline-mini .fallback-inline{
+    font-size:.72rem;
+    color:var(--text-muted);
+    white-space:nowrap;
+  }
+  .editor-topline-mini .fallback-inline a{ color:var(--accent-2); font-weight:600; }
   h1{
     font-family:'Baloo 2', 'Nunito Sans', sans-serif;
     font-weight:700;
@@ -233,13 +239,6 @@
   .editor-frame iframe.ready{
     opacity:1;
   }
-  .fallback-link-mini{
-    text-align:center;
-    font-size:.72rem;
-    color:var(--text-muted);
-    flex-shrink:0;
-  }
-  .fallback-link-mini a{ color:var(--accent-2); font-weight:600; }
   .editor-status{
     color:var(--text-muted);
     font-family:'Nunito Sans', sans-serif;
@@ -332,6 +331,7 @@
     <section class="slide editor-slide" data-slide="1" hidden>
       <div class="editor-topline-mini">
         <span class="titulo-aula">Shake-shake4</span>
+        <span class="fallback-inline">Não carregou? <a href="https://makecode.microbit.org/#tutorial:github:jonatanalan1/microbit-tutorial-piloto/teste/shake-shake4" target="_blank" rel="noopener">abrir numa aba nova</a></span>
         <div class="botoes">
           <button class="cta ghost" id="btn-back-1">← Voltar</button>
           <button class="cta" id="btn-next-1">Consegui! <span aria-hidden="true">→</span></button>
@@ -339,9 +339,6 @@
       </div>
       <div class="editor-frame" id="editor-frame">
         <div id="editor-status" class="editor-status">Carregando o editor...</div>
-      </div>
-      <div class="fallback-link-mini">
-        Não carregou? <a href="https://makecode.microbit.org/#tutorial:github:jonatanalan1/microbit-tutorial-piloto/teste/shake-shake4" target="_blank" rel="noopener">abrir numa aba nova</a>
       </div>
     </section>
 
