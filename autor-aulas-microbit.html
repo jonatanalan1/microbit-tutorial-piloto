@@ -84,6 +84,23 @@
     border-radius:14px;padding:3px 10px;font-size:12px;cursor:pointer;
   }
   .chip:hover{background:#d9e5fb;}
+  .chip-removivel{display:inline-flex;align-items:center;gap:6px;cursor:default;}
+  .chip-x{width:16px;height:16px;padding:0;border:none;border-radius:50%;background:rgba(0,0,0,.12);color:var(--azul-escuro);font-size:10px;line-height:1;cursor:pointer;}
+  .chip-x:hover{background:rgba(0,0,0,.22);}
+  .bp-bloco-secao{margin-top:14px;padding-top:14px;border-top:1px solid var(--cinza-borda);}
+  .bp-bloco-secao:first-of-type{margin-top:10px;}
+  .campo-checkbox{display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:13px;font-weight:400;color:#3c4043;cursor:pointer;}
+  .campo-checkbox input{margin-top:2px;}
+  .bp-marcar-tudo{margin-bottom:12px;}
+  .bp-item-toggle{align-items:center;cursor:pointer;padding:4px;border-radius:6px;}
+  .bp-item-toggle:hover{background:rgba(255,255,255,.08);}
+  .bp-item-toggle .bp-item-peca{pointer-events:none;}
+  .bp-check{
+    flex-shrink:0;width:20px;height:20px;border-radius:5px;
+    border:2px solid rgba(255,255,255,.5);color:#fff;font-size:13px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .bp-item-toggle.sel .bp-check{background:#34a853;border-color:#34a853;}
   .preview{
     background:#0d1117;color:#c9d1d9;padding:14px;border-radius:8px;
     font-family: "SFMono-Regular", Consolas, monospace;
@@ -408,6 +425,10 @@
         </div>
       </div>
       <p class="ajuda">Caminho que vai ser usado na página da aula: <code id="preview-caminho">github:.../...</code></p>
+      <label class="campo-checkbox">
+        <input type="checkbox" id="campo-explicit-hints" onchange="onExplicitHintsChange(this.checked)">
+        Esconder a resposta pronta até o aluno clicar em "ver dica" (em vez de aparecer sozinha no passo)
+      </label>
     </div>
 
     <div class="card">
@@ -815,7 +836,8 @@ function visualPadrao(){
 var state = {
   pasta:'', aulaNome:'', arquivoNome:'',
   visual: visualPadrao(),
-  passos:[] // {id, texto, blocos:[{id, catalogId, dentroDe, values}]}
+  explicitHints:false, // true = resposta pronta só aparece se o aluno clicar em "dica"
+  passos:[] // {id, texto, blocos:[{id, catalogId, dentroDe, values}], disponiveis:[catalogId]}
 };
 var uid = 1;
 function novoId(prefixo){ return prefixo+(uid++); }
@@ -842,6 +864,11 @@ function preencherFormularioComEstado(){
   document.getElementById('campo-emoji-comemoracao').value = state.visual.emojiComemoracao;
   document.getElementById('campo-comemoracao-titulo').value = state.visual.comemoracaoTitulo;
   document.getElementById('campo-comemoracao-texto').value = state.visual.comemoracaoTexto;
+  document.getElementById('campo-explicit-hints').checked = !!state.explicitHints;
+}
+function onExplicitHintsChange(valor){
+  state.explicitHints = valor;
+  salvarRascunho();
 }
 /* ==================== NAVEGAÇÃO ENTRE TELAS ==================== */
 function mostrarTela(nome){
@@ -858,7 +885,7 @@ function irParaCriarAula(){
   if(aulaTemConteudo()){
     if(!confirm('Começar uma aula nova vai limpar o que estiver no formulário sem salvar. Continuar?')) return;
   }
-  state = {pasta:'', aulaNome:'', arquivoNome:'', visual:visualPadrao(), passos:[]};
+  state = {pasta:'', aulaNome:'', arquivoNome:'', visual:visualPadrao(), explicitHints:false, passos:[]};
   arquivoNomeEditadoManual = false;
   adicionarPasso();
   salvarRascunho();
@@ -934,6 +961,9 @@ function fecharSeletorEmoji(){
 
 // controla qual passo tem o formulário de "adicionar bloco" aberto, e se está editando
 var uiAddBloco = {}; // { [passoId]: {catalogId, values, dentroDe, editandoBlocoId} }
+// controla a paleta de "blocos disponíveis" (toggle, vira bloco ghost), que é
+// separada da paleta de "resposta" acima: { [passoId]: {categoria, busca} }
+var uiDisponiveis = {};
 
 function salvarRascunho(){
   try{ localStorage.setItem('autor_microbit_rascunho', JSON.stringify(state)); }catch(e){}
@@ -945,6 +975,10 @@ function carregarRascunho(){
   }catch(e){}
   if(!state.visual) state.visual = visualPadrao();
   if(state.pasta==null) state.pasta = '';
+  if(state.explicitHints==null) state.explicitHints = false;
+  // rascunho salvo antes dessa versão não tem "disponiveis" (blocos liberados
+  // sem virar resposta); completa pra não quebrar o resto do código.
+  state.passos.forEach(function(p){ if(!p.disponiveis) p.disponiveis = []; });
   sincronizarUid();
 }
 
@@ -962,6 +996,23 @@ function renderPassoCodigo(passo){
   var topo = passo.blocos.filter(function(b){ return !b.dentroDe; });
   return topo.map(function(b){ return renderNode(b, passo.blocos); }).join('\n');
 }
+// "blocos disponíveis": blocos que o passo libera na caixa de ferramentas do
+// aluno sem aparecer como resposta pronta. No MakeCode isso é o recurso de
+// "ghost blocks" (```ghost```): some bloco que já apareça de verdade na
+// resposta (passo.blocos), senão ele duplicaria à toa.
+function gerarCodigoGhost(passo){
+  var usados = {};
+  passo.blocos.forEach(function(b){ usados[b.catalogId] = true; });
+  return (passo.disponiveis||[])
+    .filter(function(catalogId){ return !usados[catalogId]; })
+    .map(function(catalogId){
+      var entry = CATALOG_MAP[catalogId];
+      if(!entry) return '';
+      return entry.render(valoresPadrao(entry), '');
+    })
+    .filter(Boolean)
+    .join('\n');
+}
 // Nenhum bloco usa extensão de verdade por enquanto (o Servo Motor virou bloco
 // nativo, ver abaixo). Deixa esse mapa pronto pra quando precisar de uma
 // extensão de terceiro de verdade: id da extensão -> linha do pacote.
@@ -977,6 +1028,9 @@ function aulaUsaExtensao(extensaoId){
 function gerarMarkdown(){
   var titulo = state.aulaNome || '(nome da aula)';
   var partes = ['# '+titulo];
+  if(state.explicitHints){
+    partes.push('### @explicitHints true');
+  }
   Object.keys(EXTENSOES_PACOTE).forEach(function(ext){
     if(aulaUsaExtensao(ext)){
       partes.push('```package\n'+EXTENSOES_PACOTE[ext]+'\n```');
@@ -984,9 +1038,13 @@ function gerarMarkdown(){
   });
   state.passos.forEach(function(passo, i){
     var codigo = renderPassoCodigo(passo);
+    var ghost = gerarCodigoGhost(passo);
     var bloco = '## {Step '+(i+1)+'}\n\n'+(passo.texto||'').trim();
     if(codigo.trim()){
       bloco += '\n\n```blocks\n'+codigo+'\n```';
+    }
+    if(ghost.trim()){
+      bloco += '\n\n```ghost\n'+ghost+'\n```';
     }
     partes.push(bloco);
   });
@@ -1025,7 +1083,7 @@ function onArquivoNomeChange(manual){
 
 /* ==================== PASSOS ==================== */
 function adicionarPasso(){
-  state.passos.push({id:novoId('p'), texto:'', blocos:[]});
+  state.passos.push({id:novoId('p'), texto:'', blocos:[], disponiveis:[]});
   salvarRascunho();
   render();
 }
@@ -1266,6 +1324,35 @@ function renderListaPassos(){
     html += '<label>Texto do passo (o que a criança vai ler)</label>';
     html += '<textarea id="texto-'+passo.id+'" oninput="onTextoPassoChange(\''+passo.id+'\', this.value)">'+escapeHtml(passo.texto)+'</textarea>';
 
+    /* ---- blocos disponíveis: o que libera na caixa de ferramentas, sem virar resposta ---- */
+    var disponiveis = passo.disponiveis||[];
+    html += '<div class="bp-bloco-secao">';
+    html += '<label>Blocos disponíveis pro aluno nesse passo</label>';
+    html += '<p class="ajuda">Marca aqui os blocos que o aluno pode usar. Isso só libera na caixa de ferramentas, não aparece como resposta pronta.</p>';
+    if(disponiveis.length){
+      html += '<div class="chips">';
+      disponiveis.forEach(function(catalogId){
+        var entry = CATALOG_MAP[catalogId];
+        if(!entry) return;
+        html += '<span class="chip chip-removivel">'+escapeHtml(entry.hint)
+          + '<button type="button" class="chip-x" title="Tirar dos disponíveis" aria-label="Tirar '+escapeHtml(entry.label)+' dos disponíveis" onclick="removerDisponivel(\''+passo.id+'\',\''+catalogId+'\')">✕</button></span>';
+      });
+      html += '</div>';
+    } else {
+      html += '<p class="bp-ws-vazio">Nenhum bloco liberado ainda.</p>';
+    }
+    var uiDisp = uiDisponiveis[passo.id];
+    if(!uiDisp) html += '<button class="btn-secundario btn-mini" onclick="abrirDisponiveis(\''+passo.id+'\')">+ Escolher blocos disponíveis</button>';
+    else html += renderPaletaDisponiveis(passo);
+    html += '</div>';
+
+    /* ---- resposta pronta: opcional, mostra (ou não, com @explicitHints) o passo resolvido ---- */
+    var ui = uiAddBloco[passo.id];
+    if(ui && ui.dentroDe && !passo.blocos.some(function(b){ return b.id===ui.dentroDe; })) ui.dentroDe = '';
+
+    html += '<div class="bp-bloco-secao">';
+    html += '<label>Resposta pronta nesse passo (opcional)</label>';
+    html += '<p class="ajuda">Só preenche se quiser mostrar o passo já resolvido. Pra ter duas pilhas soltas (sem uma dentro da outra), adiciona os dois blocos escolhendo "solto no passo" nos dois.</p>';
     if(passo.blocos.length){
       html += '<div class="chips">';
       passo.blocos.forEach(function(b){
@@ -1274,17 +1361,14 @@ function renderListaPassos(){
       });
       html += '</div>';
     }
-
-    var ui = uiAddBloco[passo.id];
-    if(ui && ui.dentroDe && !passo.blocos.some(function(b){ return b.id===ui.dentroDe; })) ui.dentroDe = '';
-
     html += '<div class="bp-area">';
     html += '<div class="bp-ws">';
-    if(!passo.blocos.length) html += '<p class="bp-ws-vazio">Nenhum bloco neste passo ainda.</p>';
+    if(!passo.blocos.length) html += '<p class="bp-ws-vazio">Nenhuma resposta pronta nesse passo ainda.</p>';
     html += htmlInstancias(passo, null);
-    if(!ui) html += '<div class="bp-ws-rodape"><button class="btn-secundario btn-mini" onclick="abrirFormAddBloco(\''+passo.id+'\')">+ Adicionar bloco</button></div>';
+    if(!ui) html += '<div class="bp-ws-rodape"><button class="btn-secundario btn-mini" onclick="abrirFormAddBloco(\''+passo.id+'\')">+ Montar resposta</button></div>';
     html += '</div>';
     if(ui) html += renderPaleta(passo);
+    html += '</div>';
     html += '</div>';
 
     html += '</div>';
@@ -1488,7 +1572,7 @@ function htmlFlyout(passo){
 
   h += '<div class="bp-destino'+(ui.dentroDe?' ativo':'')+'" id="bp-destino-'+passo.id+'"><span>Adicionar em:</span>';
   h += '<select aria-label="Onde o bloco novo vai entrar" onchange="onMudaDentroDe('+pid+', this.value)">';
-  h += opt('', 'solto no passo', ui.dentroDe||'');
+  h += opt('', 'solto no passo (pilha nova, sem encaixar em nada)', ui.dentroDe||'');
   containersEmOrdem(passo).forEach(function(c){ h += opt(c.b.id, c.recuo+'dentro de: '+textoPeca(c.b), ui.dentroDe||''); });
   h += '</select></div>';
 
@@ -1499,6 +1583,122 @@ function htmlFlyout(passo){
     h += '<div class="bp-item">';
     h += '<div class="bp-item-peca" title="'+escapeHtml(entry.label)+'" onclick="'+add+'">'+htmlPeca(entry, valoresPadrao(entry), {modo:'paleta'}, '')+'</div>';
     h += '<button type="button" class="bp-mais" title="Adicionar ao passo" aria-label="Adicionar: '+escapeHtml(entry.label)+'" onclick="'+add+'">+</button>';
+    h += '</div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+/* ---------- paleta de "blocos disponíveis" (toggle -> bloco ghost) ----------
+   Separada da paleta de resposta acima: aqui não existe "adicionar em" nem
+   encaixe, é só marcar quais blocos ficam liberados pro aluno usar. */
+function abrirDisponiveis(passoId){
+  var atual = uiDisponiveis[passoId];
+  uiDisponiveis[passoId] = {categoria: atual ? atual.categoria : CATEGORIAS_TOOLBOX[0], busca:''};
+  render();
+  var el = document.getElementById('bp-disp-'+passoId);
+  if(el && el.scrollIntoView) el.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+function fecharDisponiveis(passoId){
+  delete uiDisponiveis[passoId];
+  render();
+}
+function dispCategoria(passoId, categoria){
+  uiDisponiveis[passoId].categoria = categoria;
+  uiDisponiveis[passoId].busca = '';
+  render();
+  var fly = document.getElementById('bp-disp-fly-'+passoId);
+  if(fly) fly.scrollTop = 0;
+}
+function dispBuscar(passoId, valor){
+  var ui = uiDisponiveis[passoId];
+  ui.busca = valor;
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  var fly = document.getElementById('bp-disp-fly-'+passoId);
+  if(fly){ fly.innerHTML = htmlFlyoutDisponiveis(passo); fly.scrollTop = 0; }
+  var buscando = !!valor.trim();
+  document.querySelectorAll('#bp-disp-'+passoId+' .bp-cat').forEach(function(el){
+    el.classList.toggle('ativa', !buscando && el.getAttribute('data-cat')===ui.categoria);
+  });
+}
+function toggleDisponivel(passoId, catalogId){
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  if(!passo.disponiveis) passo.disponiveis = [];
+  var i = passo.disponiveis.indexOf(catalogId);
+  if(i===-1) passo.disponiveis.push(catalogId); else passo.disponiveis.splice(i,1);
+  salvarRascunho();
+  render();
+}
+function removerDisponivel(passoId, catalogId){
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  passo.disponiveis = (passo.disponiveis||[]).filter(function(c){ return c!==catalogId; });
+  salvarRascunho();
+  render();
+}
+// marca/desmarca de uma vez todos os blocos da categoria mostrada na paleta
+function toggleCategoriaDisponivel(passoId){
+  var passo = state.passos.find(function(p){ return p.id===passoId; });
+  var ui = uiDisponiveis[passoId];
+  if(!passo.disponiveis) passo.disponiveis = [];
+  var daCategoria = CATALOG.filter(function(e){ return e.categoria===ui.categoria; }).map(function(e){ return e.id; });
+  var todasMarcadas = daCategoria.every(function(id){ return passo.disponiveis.indexOf(id)!==-1; });
+  if(todasMarcadas){
+    passo.disponiveis = passo.disponiveis.filter(function(id){ return daCategoria.indexOf(id)===-1; });
+  } else {
+    daCategoria.forEach(function(id){ if(passo.disponiveis.indexOf(id)===-1) passo.disponiveis.push(id); });
+  }
+  salvarRascunho();
+  render();
+}
+function renderPaletaDisponiveis(passo){
+  var ui = uiDisponiveis[passo.id];
+  var pid = '\''+passo.id+'\'';
+  var buscando = !!(ui.busca||'').trim();
+  var h = '<div class="bp-paleta" id="bp-disp-'+passo.id+'">';
+  h += '<div class="bp-toolbox">';
+  h += '<div class="bp-busca"><input type="text" placeholder="Pesquisar..." aria-label="Pesquisar blocos" value="'+escapeHtml(ui.busca||'')+'" oninput="dispBuscar('+pid+', this.value)">'+SVG_ICONE.busca+'</div>';
+  h += '<div class="bp-cats" id="bp-disp-cats-'+passo.id+'" data-bp-rolagem>';
+  CATEGORIAS_TOOLBOX.forEach(function(cat){
+    var ativa = !buscando && cat===ui.categoria;
+    h += '<button type="button" class="bp-cat'+(ativa?' ativa':'')+'" data-cat="'+escapeHtml(cat)+'" style="--cor:'+corCategoria(cat)+'" onclick="dispCategoria('+pid+','+escapeHtml(JSON.stringify(cat))+')">'
+      + '<span class="bp-cat-ico">'+svgCategoria(cat)+'</span><span>'+escapeHtml(cat)+'</span></button>';
+  });
+  h += '</div></div>';
+  h += '<div class="bp-flyout" id="bp-disp-fly-'+passo.id+'" data-bp-rolagem>'+htmlFlyoutDisponiveis(passo)+'</div>';
+  return h+'</div>';
+}
+function htmlFlyoutDisponiveis(passo){
+  var ui = uiDisponiveis[passo.id];
+  var pid = '\''+passo.id+'\'';
+  var busca = (ui.busca||'').trim();
+  var disponiveis = passo.disponiveis||[];
+  var lista;
+  var h = '<div class="bp-fly-topo">';
+  if(busca){
+    var termo = normalizarBusca(busca);
+    lista = CATALOG.filter(function(e){ return textoBusca(e).indexOf(termo)!==-1; });
+    h += '<span class="bp-fly-titulo">'+SVG_ICONE.busca+'Resultados</span>';
+  } else {
+    lista = CATALOG.filter(function(e){ return e.categoria===ui.categoria; });
+    h += '<span class="bp-fly-titulo">'+svgCategoria(ui.categoria)+escapeHtml(ui.categoria)+'</span>';
+  }
+  h += '<button type="button" class="bp-fechar" onclick="fecharDisponiveis('+pid+')">Fechar ✕</button></div>';
+
+  if(!busca){
+    var daCategoria = CATALOG.filter(function(e){ return e.categoria===ui.categoria; }).map(function(e){ return e.id; });
+    var todasMarcadas = daCategoria.length && daCategoria.every(function(id){ return disponiveis.indexOf(id)!==-1; });
+    h += '<div class="bp-marcar-tudo"><button type="button" class="btn-secundario btn-mini" onclick="toggleCategoriaDisponivel('+pid+')">'
+      + (todasMarcadas? '✕ Desmarcar toda a categoria' : '✓ Marcar toda a categoria')+'</button></div>';
+  }
+
+  if(!lista.length) h += '<p class="bp-vazio">Nenhum bloco encontrado pra “'+escapeHtml(busca)+'”.</p>';
+  h += '<div class="bp-lista">';
+  lista.forEach(function(entry){
+    var marcado = disponiveis.indexOf(entry.id)!==-1;
+    var toggle = 'toggleDisponivel('+pid+',\''+entry.id+'\')';
+    h += '<div class="bp-item bp-item-toggle'+(marcado?' sel':'')+'" title="'+(marcado?'Clique pra tirar da caixa de ferramentas do aluno':'Clique pra liberar na caixa de ferramentas do aluno')+'" onclick="'+toggle+'">';
+    h += '<span class="bp-check" aria-hidden="true">'+(marcado?'✓':'')+'</span>';
+    h += '<div class="bp-item-peca">'+htmlPeca(entry, valoresPadrao(entry), {modo:'paleta'}, '')+'</div>';
     h += '</div>';
   });
   h += '</div>';
